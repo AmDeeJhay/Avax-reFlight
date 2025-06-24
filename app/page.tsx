@@ -34,7 +34,7 @@ export default function FlyChainLanding() {
               <Plane className="w-3 h-3 sm:w-5 sm:h-5 text-white" />
             </div>
             <span className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-red-500 to-blue-600 bg-clip-text text-transparent">
-              FlyChain
+              Avax-reFlight
             </span>
           </div>
           <nav className="hidden md:flex items-center space-x-6 lg:space-x-8">
@@ -376,7 +376,7 @@ export default function FlyChainLanding() {
             <Button
               size="lg"
               variant="outline"
-              className="border-white text-white hover:bg-white hover:text-gray-900 w-full sm:w-auto"
+              className="border-white text-gray-900 hover:bg-white hover:text-gray-900 w-full sm:w-auto"
               onClick={() => {
                 document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })
               }}
@@ -482,7 +482,7 @@ export default function FlyChainLanding() {
           </div>
 
           <div className="border-t border-gray-800 mt-6 sm:mt-8 pt-6 sm:pt-8 text-center text-gray-400 mobile-text">
-            <p>&copy; 2024 FlyChain. All rights reserved. Built on Avalanche. Powered by Chainlink.</p>
+            <p>&copy; 2025 Avax-reFlight. All rights reserved. Built on Avalanche. Powered by Chainlink.</p>
           </div>
         </div>
       </footer>

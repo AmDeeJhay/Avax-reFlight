@@ -133,12 +133,7 @@ export default function DashboardLayout({
           </Button>
 
           <div className="flex flex-1 gap-x-2 sm:gap-x-4 self-stretch lg:gap-x-6 min-w-0">
-            <div className="flex flex-1 items-center min-w-0">
-              <Button onClick={() => router.push("/")} variant="ghost" size="sm" className="lg:hidden">
-                <ArrowLeft className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
-                <span className="truncate text-xs sm:text-sm">Home</span>
-              </Button>
-            </div>
+            
             <div className="flex items-center gap-x-2 sm:gap-x-4 lg:gap-x-6 flex-shrink-0">
               {/* Notifications */}
               <NotificationPanel>

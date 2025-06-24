@@ -129,10 +129,10 @@ export default function DashboardLayout({
         {/* Top navigation */}
         <div className="sticky top-0 z-40 flex h-14 sm:h-16 shrink-0 items-center gap-x-2 sm:gap-x-4 border-b border-gray-200 bg-white px-3 sm:px-4 lg:px-6 xl:px-8 shadow-sm mobile-header">
           <Button variant="ghost" size="sm" className="lg:hidden" onClick={() => setSidebarOpen(true)}>
-            <Menu className="w-4 h-4 sm:w-5 sm:h-5" />
+            <Menu className="w-5 h-5 sm:w-5 sm:h-5" />
           </Button>
 
-          <div className="flex flex-1 gap-x-2 sm:gap-x-4 self-stretch lg:gap-x-6 min-w-0">
+          <div className="flex flex-1 gap-x-2 sm:gap-x-8 self-stretch lg:gap-x-6 min-w-0">
             
             <div className="flex items-center gap-x-2 sm:gap-x-4 lg:gap-x-6 flex-shrink-0">
               {/* Notifications */}

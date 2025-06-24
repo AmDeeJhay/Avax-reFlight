@@ -83,7 +83,7 @@ export function AddFlightModal({ trigger }: AddFlightModalProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Plane className="w-5 h-5" />
-            Add New Flight
+            Add Flight
           </DialogTitle>
         </DialogHeader>
 

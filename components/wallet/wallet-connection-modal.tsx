@@ -25,28 +25,28 @@ const walletOptions: WalletOption[] = [
   {
     id: "metamask",
     name: "MetaMask",
-    icon: <Chrome className="w-8 h-8" />,
+    icon: <Chrome className="w-6 h-6 sm:w-8 sm:h-8" />,
     description: "Connect using MetaMask browser extension",
     type: "real",
   },
   {
     id: "walletconnect",
     name: "WalletConnect",
-    icon: <Smartphone className="w-8 h-8" />,
+    icon: <Smartphone className="w-6 h-6 sm:w-8 sm:h-8" />,
     description: "Connect using WalletConnect protocol",
     type: "real",
   },
   {
     id: "coinbase",
     name: "Coinbase Wallet",
-    icon: <Globe className="w-8 h-8" />,
+    icon: <Globe className="w-6 h-6 sm:w-8 sm:h-8" />,
     description: "Connect using Coinbase Wallet",
     type: "real",
   },
   {
     id: "demo-user",
     name: "Demo User",
-    icon: <User className="w-8 h-8 text-blue-500" />,
+    icon: <User className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500" />,
     description: "Try the platform with sample user data",
     type: "demo",
     role: "user",
@@ -54,7 +54,7 @@ const walletOptions: WalletOption[] = [
   {
     id: "demo-admin",
     name: "Demo Admin",
-    icon: <Shield className="w-8 h-8 text-purple-500" />,
+    icon: <Shield className="w-6 h-6 sm:w-8 sm:h-8 text-purple-500" />,
     description: "Explore admin features with demo data",
     type: "demo",
     role: "admin",
@@ -129,16 +129,16 @@ export function WalletConnectionModal({ open, onOpenChange }: WalletConnectionMo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="mobile-modal">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Wallet className="w-5 h-5" />
+          <DialogTitle className="flex items-center gap-2 mobile-text">
+            <Wallet className="w-4 h-4 sm:w-5 sm:h-5" />
             Connect Wallet
           </DialogTitle>
-          <DialogDescription>Choose how you'd like to connect to FlyChain</DialogDescription>
+          <DialogDescription className="mobile-text">Choose how you'd like to connect to FlyChain</DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3 mt-4">
+        <div className="space-y-2 sm:space-y-3 mt-4">
           <AnimatePresence>
             {walletOptions.map((wallet, index) => (
               <motion.div
@@ -150,14 +150,14 @@ export function WalletConnectionModal({ open, onOpenChange }: WalletConnectionMo
               >
                 <Button
                   variant="outline"
-                  className="w-full h-auto p-4 justify-start hover:bg-gray-50 transition-all duration-200 group"
+                  className="w-full h-auto p-3 sm:p-4 justify-start hover:bg-gray-50 transition-all duration-200 group min-h-[60px] sm:min-h-[auto]"
                   onClick={() => handleWalletConnect(wallet)}
                   disabled={connecting !== null}
                 >
-                  <div className="flex items-center space-x-4 w-full">
+                  <div className="flex items-center space-x-3 sm:space-x-4 w-full">
                     <div className="flex-shrink-0 relative">
                       {connecting === wallet.id ? (
-                        <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+                        <Loader2 className="w-6 h-6 sm:w-8 sm:h-8 animate-spin text-blue-500" />
                       ) : (
                         <motion.div whileHover={{ scale: 1.1 }} transition={{ duration: 0.2 }}>
                           {wallet.icon}
@@ -165,24 +165,24 @@ export function WalletConnectionModal({ open, onOpenChange }: WalletConnectionMo
                       )}
                     </div>
 
-                    <div className="flex-1 text-left">
+                    <div className="flex-1 text-left min-w-0">
                       <div className="flex items-center gap-2 mb-1">
-                        <p className="font-medium text-gray-900">{wallet.name}</p>
+                        <p className="font-medium text-gray-900 mobile-text truncate">{wallet.name}</p>
                         {wallet.type === "demo" && (
-                          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                          <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 text-xs flex-shrink-0">
                             <Zap className="w-3 h-3 mr-1" />
                             DEMO
                           </Badge>
                         )}
                       </div>
-                      <p className="text-sm text-gray-500">{wallet.description}</p>
+                      <p className="text-xs sm:text-sm text-gray-500 line-clamp-2">{wallet.description}</p>
                     </div>
 
                     {connecting === wallet.id && (
                       <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        className="text-sm text-blue-600 font-medium"
+                        className="text-xs sm:text-sm text-blue-600 font-medium flex-shrink-0"
                       >
                         Connecting...
                       </motion.div>
@@ -194,7 +194,7 @@ export function WalletConnectionModal({ open, onOpenChange }: WalletConnectionMo
           </AnimatePresence>
         </div>
 
-        <div className="mt-6 pt-4 border-t">
+        <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t">
           <p className="text-xs text-gray-500 text-center">
             By connecting a wallet, you agree to FlyChain's Terms of Service and Privacy Policy
           </p>

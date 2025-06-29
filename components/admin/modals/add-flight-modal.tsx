@@ -116,7 +116,7 @@ export function AddFlightModal({ trigger }: AddFlightModalProps) {
         {trigger || (
           <Button className="bg-gradient-to-r from-red-500 to-blue-600">
             <Plus className="w-4 h-4 mr-2" />
-            Add New Flight
+            Add Flight
           </Button>
         )}
       </DialogTrigger>
@@ -124,7 +124,7 @@ export function AddFlightModal({ trigger }: AddFlightModalProps) {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Plane className="w-5 h-5" />
-            Add New Flight
+            Add Flight
           </DialogTitle>
         </DialogHeader>
 

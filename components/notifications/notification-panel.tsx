@@ -92,18 +92,18 @@ export function NotificationPanel({ children }: NotificationPanelProps) {
         <div className="relative">
           {children}
           {unreadCount > 0 && (
-            <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 flex items-center justify-center bg-red-500 text-white text-xs">
+            <Badge className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 p-0 flex items-center justify-center bg-red-500 text-white text-xs">
               {unreadCount}
             </Badge>
           )}
         </div>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80 p-0">
+      <DropdownMenuContent align="end" className="w-72 sm:w-80 p-0 mobile-modal">
         <Card className="border-0 shadow-lg">
-          <CardHeader className="pb-3">
+          <CardHeader className="pb-2 sm:pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg">Notifications</CardTitle>
-              <div className="flex items-center space-x-2">
+              <CardTitle className="text-base sm:text-lg">Notifications</CardTitle>
+              <div className="flex items-center space-x-1 sm:space-x-2">
                 {unreadCount > 0 && (
                   <Button variant="ghost" size="sm" onClick={markAllAsRead} className="text-xs">
                     Mark all read
@@ -116,7 +116,7 @@ export function NotificationPanel({ children }: NotificationPanelProps) {
             </div>
           </CardHeader>
           <CardContent className="p-0">
-            <ScrollArea className="h-96">
+            <ScrollArea className="h-80 sm:h-96">
               <AnimatePresence>
                 {notifications.length > 0 ? (
                   <div className="space-y-1">
@@ -128,21 +128,21 @@ export function NotificationPanel({ children }: NotificationPanelProps) {
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, x: -100 }}
-                          className={`p-3 hover:bg-gray-50 cursor-pointer border-l-4 ${
+                          className={`p-2 sm:p-3 hover:bg-gray-50 cursor-pointer border-l-4 ${
                             notification.read ? "border-transparent bg-gray-50/50" : "border-blue-500 bg-blue-50/50"
-                          }`}
+                          } group`}
                           onClick={() => markAsRead(notification.id)}
                         >
-                          <div className="flex items-start space-x-3">
+                          <div className="flex items-start space-x-2 sm:space-x-3">
                             <div
-                              className={`w-8 h-8 rounded-full bg-white flex items-center justify-center ${notification.color}`}
+                              className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-white flex items-center justify-center ${notification.color} flex-shrink-0`}
                             >
-                              <Icon className="w-4 h-4" />
+                              <Icon className="w-3 h-3 sm:w-4 sm:h-4" />
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between">
                                 <p
-                                  className={`text-sm font-medium truncate ${
+                                  className={`text-xs sm:text-sm font-medium mobile-truncate ${
                                     notification.read ? "text-gray-600" : "text-gray-900"
                                   }`}
                                 >
@@ -155,25 +155,25 @@ export function NotificationPanel({ children }: NotificationPanelProps) {
                                     e.stopPropagation()
                                     removeNotification(notification.id)
                                   }}
-                                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                                  className="opacity-0 group-hover:opacity-100 transition-opacity p-1 h-auto"
                                 >
                                   <X className="w-3 h-3" />
                                 </Button>
                               </div>
-                              <p className={`text-xs mt-1 ${notification.read ? "text-gray-500" : "text-gray-700"}`}>
+                              <p className={`text-xs mt-1 line-clamp-2 ${notification.read ? "text-gray-500" : "text-gray-700"}`}>
                                 {notification.message}
                               </p>
                               <p className="text-xs text-gray-400 mt-1">{notification.time}</p>
                             </div>
-                            {!notification.read && <div className="w-2 h-2 bg-blue-500 rounded-full mt-2" />}
+                            {!notification.read && <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0" />}
                           </div>
                         </motion.div>
                       )
                     })}
                   </div>
                 ) : (
-                  <div className="text-center py-8">
-                    <Bell className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <div className="text-center py-6 sm:py-8">
+                    <Bell className="w-8 h-8 sm:w-12 sm:h-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
                     <p className="text-sm text-gray-600">No notifications</p>
                   </div>
                 )}

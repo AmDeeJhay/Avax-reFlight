@@ -90,7 +90,7 @@ export function UnifiedConnectButton({
     return (
       <Button variant={variant} size={size} className={className} disabled>
         <Wallet className="w-4 h-4 mr-2" />
-        Loading...
+        <span className="mobile-text">Loading...</span>
       </Button>
     )
   }
@@ -101,12 +101,12 @@ export function UnifiedConnectButton({
         <DropdownMenuTrigger asChild>
           <Button variant={variant} size={size} className={`${className} relative overflow-hidden group`}>
             <motion.div
-              className="flex items-center space-x-2"
+              className="flex items-center space-x-1 sm:space-x-2"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1 sm:space-x-2">
                 {isDemoMode ? (
                   <Zap className="w-3 h-3 text-yellow-500" />
                 ) : (
@@ -114,34 +114,34 @@ export function UnifiedConnectButton({
                 )}
                 <Badge
                   variant={isDemoMode ? "secondary" : "default"}
-                  className={isDemoMode ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800"}
+                  className={`${isDemoMode ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800"} text-xs`}
                 >
                   {isDemoMode ? "DEMO" : "LIVE"}
                 </Badge>
               </div>
               <div className="hidden sm:block text-right">
-                <p className="text-sm font-medium">{balance} AVAX</p>
-                <p className="text-xs opacity-75">{formatAddress(address)}</p>
+                <p className="text-xs sm:text-sm font-medium mobile-truncate">{balance} AVAX</p>
+                <p className="text-xs opacity-75 mobile-truncate">{formatAddress(address)}</p>
               </div>
               <div className="sm:hidden">
                 <Wallet className="w-4 h-4" />
               </div>
-              <ChevronDown className="w-4 h-4" />
+              <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4" />
             </motion.div>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-64">
+        <DropdownMenuContent align="end" className="w-56 sm:w-64 mobile-modal">
           <div className="px-3 py-2">
             <div className="flex items-center justify-between mb-2">
-              <p className="font-medium">{isDemoMode ? "Demo Wallet" : "Connected Wallet"}</p>
+              <p className="font-medium mobile-text">{isDemoMode ? "Demo Wallet" : "Connected Wallet"}</p>
               <Badge
                 variant={isDemoMode ? "secondary" : "default"}
-                className={isDemoMode ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800"}
+                className={`${isDemoMode ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800"} text-xs`}
               >
                 {isDemoMode ? "DEMO" : "LIVE"}
               </Badge>
             </div>
-            <p className="text-xs text-muted-foreground">{formatAddress(address)}</p>
+            <p className="text-xs text-muted-foreground mobile-truncate">{formatAddress(address)}</p>
             <p className="text-xs text-muted-foreground">Balance: {balance} AVAX</p>
             {role && <p className="text-xs text-muted-foreground capitalize">Role: {role}</p>}
           </div>
@@ -150,12 +150,12 @@ export function UnifiedConnectButton({
 
           <DropdownMenuItem onClick={copyAddress}>
             <Copy className="w-4 h-4 mr-2" />
-            Copy Address
+            <span className="mobile-text">Copy Address</span>
           </DropdownMenuItem>
 
           <DropdownMenuItem onClick={() => window.open(`https://testnet.snowtrace.io/address/${address}`, "_blank")}>
             <ExternalLink className="w-4 h-4 mr-2" />
-            View on Explorer
+            <span className="mobile-text">View on Explorer</span>
           </DropdownMenuItem>
 
           {isDemoMode && showRoleSwitch && (
@@ -163,11 +163,11 @@ export function UnifiedConnectButton({
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => handleRoleSwitch("user")} disabled={role === "user"}>
                 <User className="w-4 h-4 mr-2" />
-                Switch to User
+                <span className="mobile-text">Switch to User</span>
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => handleRoleSwitch("admin")} disabled={role === "admin"}>
                 <Shield className="w-4 h-4 mr-2" />
-                Switch to Admin
+                <span className="mobile-text">Switch to Admin</span>
               </DropdownMenuItem>
             </>
           )}
@@ -176,7 +176,7 @@ export function UnifiedConnectButton({
 
           <DropdownMenuItem onClick={handleDisconnect} className="text-red-600">
             <LogOut className="w-4 h-4 mr-2" />
-            Disconnect
+            <span className="mobile-text">Disconnect</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -200,7 +200,7 @@ export function UnifiedConnectButton({
           >
             <motion.div className="flex items-center space-x-2">
               <Wallet className="w-4 h-4" />
-              <span>Connect Wallet</span>
+              <span className="mobile-text">Connect Wallet</span>
             </motion.div>
             <motion.div
               className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100"

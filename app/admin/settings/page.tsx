@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,9 +9,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Settings, Shield, Bell, Zap, Users, Save } from "lucide-react"
 import { toast } from "@/components/ui/use-toast"
+import React from "react"
 
 export default function AdminSettings() {
-  const [notifications, setNotifications] = useState({
+  const [notifications, setNotifications] = React.useState({
     newBookings: true,
     disputes: true,
     systemAlerts: true,

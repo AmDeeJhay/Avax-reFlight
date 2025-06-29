@@ -4,43 +4,14 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Bell, CheckCircle, Clock, AlertCircle, X } from "lucide-react"
-
-const mockNotifications = [
-  {
-    id: "1",
-    type: "success",
-    title: "Refund Approved",
-    message: "Your LAX → NYC refund of 0.4 AVAX has been processed",
-    time: "2 hours ago",
-    read: false,
-  },
-  {
-    id: "2",
-    type: "info",
-    title: "Ticket Sold",
-    message: "Your Miami → Boston ticket sold for 0.3 AVAX",
-    time: "1 day ago",
-    read: false,
-  },
-  {
-    id: "3",
-    type: "warning",
-    title: "Flight Reminder",
-    message: "NYC → LAX flight in 5 days. Check-in opens in 1 day",
-    time: "3 days ago",
-    read: true,
-  },
-  {
-    id: "4",
-    type: "error",
-    title: "Payment Failed",
-    message: "Your payment for flight booking was declined. Please try again.",
-    time: "5 days ago",
-    read: true,
-  },
-]
+import { useEffect, useState } from "react"
+import { getUserNotifications } from "@/lib/user-dashboard-api"
 
 export default function NotificationsPage() {
+  const [notifications, setNotifications] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
   const getIcon = (type: string) => {
     switch (type) {
       case "success":
@@ -71,6 +42,22 @@ export default function NotificationsPage() {
     }
   }
 
+  useEffect(() => {
+    setLoading(true)
+    getUserNotifications()
+      .then((data) => {
+        setNotifications(data.notifications || [])
+        setLoading(false)
+      })
+      .catch((err) => {
+        setError(typeof err === "string" ? err : "Failed to load notifications")
+        setLoading(false)
+      })
+  }, [])
+
+  if (loading) return <div className="p-8 text-center">Loading notifications...</div>
+  if (error) return <div className="p-8 text-center text-red-500">{error}</div>
+
   return (
     <div className="px-4 sm:px-6 lg:px-8">
       <div className="mb-8">
@@ -79,7 +66,7 @@ export default function NotificationsPage() {
       </div>
 
       <div className="space-y-4">
-        {mockNotifications.map((notification) => (
+        {notifications.map((notification) => (
           <Card key={notification.id} className={`${!notification.read ? "border-blue-200 bg-blue-50" : ""}`}>
             <CardContent className="p-6">
               <div className="flex items-start justify-between">

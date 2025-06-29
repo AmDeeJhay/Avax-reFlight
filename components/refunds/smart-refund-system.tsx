@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { DollarSign, Shield, AlertTriangle, CheckCircle, Calculator, Timer, Plane, Info } from "lucide-react"
+import { fetchFromApi } from "@/lib/api"
 
 interface RefundPolicy {
   airline: string
@@ -61,6 +62,9 @@ export function SmartRefundSystem({ ticket, onRefundRequest }: SmartRefundProps)
   const [timeUntilFlight, setTimeUntilFlight] = useState<number>(0)
   const [refundEligibility, setRefundEligibility] = useState<any>(null)
   const [isCalculating, setIsCalculating] = useState(false)
+  const [policy, setPolicy] = useState<RefundPolicy | null>(null)
+  const [policyLoading, setPolicyLoading] = useState(true)
+  const [policyError, setPolicyError] = useState<string | null>(null)
 
   useEffect(() => {
     const calculateTimeUntilFlight = () => {
@@ -79,23 +83,34 @@ export function SmartRefundSystem({ ticket, onRefundRequest }: SmartRefundProps)
     return () => clearInterval(interval)
   }, [ticket])
 
+  useEffect(() => {
+    setPolicyLoading(true)
+    setPolicyError(null)
+    fetchFromApi(`airlines/${encodeURIComponent(ticket.airline)}/refund-policy`)
+      .then((data) => {
+        setPolicy(data)
+        setPolicyLoading(false)
+      })
+      .catch((err) => {
+        setPolicyError(typeof err === "string" ? err : "Failed to load airline policy")
+        setPolicyLoading(false)
+      })
+  }, [ticket.airline])
+
   const calculateRefundEligibility = (hoursUntilFlight: number) => {
     setIsCalculating(true)
 
     setTimeout(() => {
-      const policy = AIRLINE_POLICIES[ticket.airline]
-      if (!policy) {
-        setRefundEligibility({
-          eligible: false,
-          reason: "Airline policy not found",
-        })
+      const usedPolicy = policy || AIRLINE_POLICIES[ticket.airline]
+      if (!usedPolicy) {
+        setRefundEligibility({ eligible: false, reason: "Airline policy not found" })
         setIsCalculating(false)
         return
       }
 
-      let applicableRule = policy.rules[policy.rules.length - 1] // Default to last rule
+      let applicableRule = usedPolicy.rules[usedPolicy.rules.length - 1] // Default to last rule
 
-      for (const rule of policy.rules) {
+      for (const rule of usedPolicy.rules) {
         const [min, max] = rule.timeframe.includes("+")
           ? [Number.parseInt(rule.timeframe), Number.POSITIVE_INFINITY]
           : rule.timeframe.split("-").map((t) => Number.parseInt(t))
@@ -311,19 +326,25 @@ export function SmartRefundSystem({ ticket, onRefundRequest }: SmartRefundProps)
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {AIRLINE_POLICIES[ticket.airline]?.rules.map((rule, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div>
-                  <p className="font-medium text-sm">{rule.timeframe} before departure</p>
-                  <p className="text-xs text-gray-600">{rule.description}</p>
+          {policyLoading ? (
+            <div className="text-center py-4 text-gray-500">Loading airline policy...</div>
+          ) : policyError ? (
+            <div className="text-center py-4 text-red-500">{policyError}</div>
+          ) : (
+            <div className="space-y-3">
+              {(policy || AIRLINE_POLICIES[ticket.airline])?.rules.map((rule, index) => (
+                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <p className="font-medium text-sm">{rule.timeframe} before departure</p>
+                    <p className="text-xs text-gray-600">{rule.description}</p>
+                  </div>
+                  <Badge variant={rule.percentage >= 80 ? "default" : rule.percentage >= 50 ? "secondary" : "outline"}>
+                    {rule.percentage}%
+                  </Badge>
                 </div>
-                <Badge variant={rule.percentage >= 80 ? "default" : rule.percentage >= 50 ? "secondary" : "outline"}>
-                  {rule.percentage}%
-                </Badge>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

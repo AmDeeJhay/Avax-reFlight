@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { DollarSign } from "lucide-react"
+import { makeMarketplaceOffer } from "@/lib/api"
 
 interface MakeOfferModalProps {
   listing: any
@@ -19,9 +20,10 @@ export function MakeOfferModal({ listing, trigger }: MakeOfferModalProps) {
   const [open, setOpen] = useState(false)
   const [offerAmount, setOfferAmount] = useState("")
   const [message, setMessage] = useState("")
+  const [loading, setLoading] = useState(false)
   const { toast } = useToast()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!offerAmount || isNaN(Number(offerAmount))) {
@@ -33,32 +35,29 @@ export function MakeOfferModal({ listing, trigger }: MakeOfferModalProps) {
       return
     }
 
-    // API call would go here
-    fetch(`/api/marketplace/offers`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+    setLoading(true)
+    try {
+      await makeMarketplaceOffer({
         listingId: listing.id,
         offerAmount: Number(offerAmount),
         message,
-      }),
-    })
-      .then(() => {
-        toast({
-          title: "Offer Submitted",
-          description: `Your offer of ${offerAmount} AVAX has been sent to the seller`,
-        })
-        setOpen(false)
-        setOfferAmount("")
-        setMessage("")
       })
-      .catch(() => {
-        toast({
-          title: "Offer Failed",
-          description: "Failed to submit offer. Please try again.",
-          variant: "destructive",
-        })
+      toast({
+        title: "Offer Submitted",
+        description: `Your offer of ${offerAmount} AVAX has been sent to the seller`,
       })
+      setOpen(false)
+      setOfferAmount("")
+      setMessage("")
+    } catch (err: any) {
+      toast({
+        title: "Offer Failed",
+        description: err?.message || "Failed to submit offer. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
   const suggestedOffer = (listing.listingPrice * 0.9).toFixed(4)
@@ -139,8 +138,8 @@ export function MakeOfferModal({ listing, trigger }: MakeOfferModalProps) {
             <Button type="button" variant="outline" onClick={() => setOpen(false)}>
               Cancel
             </Button>
-            <Button type="submit" className="bg-gradient-to-r from-red-500 to-blue-600">
-              Submit Offer
+            <Button type="submit" className="bg-gradient-to-r from-red-500 to-blue-600" disabled={loading}>
+              {loading ? "Submitting..." : "Submit Offer"}
             </Button>
           </div>
         </form>

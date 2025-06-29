@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { MessageSquare, CheckCircle, Send } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { fetchFromApi } from "@/lib/api"
 
 interface DisputeDetailsModalProps {
   dispute: any
@@ -20,6 +22,20 @@ interface DisputeDetailsModalProps {
 
 export function DisputeDetailsModal({ dispute, trigger }: DisputeDetailsModalProps) {
   const [open, setOpen] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [details, setDetails] = useState<any>(null)
+
+  useEffect(() => {
+    if (open && dispute?.id) {
+      setLoading(true)
+      fetchFromApi(`admin/disputes/${dispute.id}`)
+        .then((res) => {
+          setDetails(res.data)
+          setLoading(false)
+        })
+        .catch(() => setLoading(false))
+    }
+  }, [open, dispute?.id])
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -57,90 +73,108 @@ export function DisputeDetailsModal({ dispute, trigger }: DisputeDetailsModalPro
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <MessageSquare className="w-5 h-5" />
             Dispute Details - {dispute?.id}
           </DialogTitle>
         </DialogHeader>
+        {loading ? (
+          <div className="space-y-6">
+            <Skeleton className="h-8 w-48 mb-2" />
+            <Skeleton className="h-4 w-64" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[...Array(2)].map((_, i) => (
+                <div key={i} className="bg-gray-50 p-4 rounded-lg">
+                  <Skeleton className="h-6 w-32 mb-2" />
+                  {[...Array(5)].map((_, j) => (
+                    <Skeleton key={j} className="h-4 w-40 mb-2" />
+                  ))}
+                </div>
+              ))}
+            </div>
+            <Skeleton className="h-10 w-full mb-2" />
+            <Skeleton className="h-10 w-full mb-2" />
+            <Skeleton className="h-10 w-full mb-2" />
+          </div>
+        ) : (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-semibold mb-3">Dispute Information</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Dispute ID:</span>
+                    <span className="font-medium">{details?.id}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Ticket ID:</span>
+                    <span className="font-medium">{details?.ticketId}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Type:</span>
+                    <span className="font-medium capitalize">{details?.type}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Status:</span>
+                    {getStatusBadge(details?.status)}
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Priority:</span>
+                    {getPriorityBadge(details?.priority)}
+                  </div>
+                </div>
+              </div>
 
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-semibold mb-3">Dispute Information</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Dispute ID:</span>
-                  <span className="font-medium">{dispute?.id}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Ticket ID:</span>
-                  <span className="font-medium">{dispute?.ticketId}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Type:</span>
-                  <span className="font-medium capitalize">{dispute?.type}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Status:</span>
-                  {getStatusBadge(dispute?.status)}
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Priority:</span>
-                  {getPriorityBadge(dispute?.priority)}
+              <div className="bg-gray-50 p-4 rounded-lg">
+                <h3 className="font-semibold mb-3">User & Timeline</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">User:</span>
+                    <span className="font-medium">{details?.user}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Created:</span>
+                    <span className="font-medium">{new Date(details?.createdDate).toLocaleDateString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Last Update:</span>
+                    <span className="font-medium">{new Date(details?.lastUpdate).toLocaleDateString()}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Assigned To:</span>
+                    <span className="font-medium">{details?.assignedTo}</span>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <h3 className="font-semibold mb-3">User & Timeline</h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">User:</span>
-                  <span className="font-medium">{dispute?.user}</span>
+            <div className="bg-white border rounded-lg p-4">
+              <h3 className="font-semibold mb-3">Subject</h3>
+              <p className="text-gray-900">{details?.subject}</p>
+            </div>
+
+            <div className="bg-white border rounded-lg p-4">
+              <h3 className="font-semibold mb-3">Description</h3>
+              <p className="text-gray-700 whitespace-pre-wrap">{details?.description}</p>
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 className="font-semibold mb-3">Communication History</h3>
+              <div className="space-y-3">
+                <div className="bg-white p-3 rounded border-l-4 border-l-blue-500">
+                  <div className="flex justify-between items-start mb-2">
+                    <span className="font-medium text-sm">User ({details?.user})</span>
+                    <span className="text-xs text-gray-500">{new Date(details?.createdDate).toLocaleString()}</span>
+                  </div>
+                  <p className="text-sm text-gray-700">{details?.description}</p>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Created:</span>
-                  <span className="font-medium">{new Date(dispute?.createdDate).toLocaleDateString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Last Update:</span>
-                  <span className="font-medium">{new Date(dispute?.lastUpdate).toLocaleDateString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Assigned To:</span>
-                  <span className="font-medium">{dispute?.assignedTo}</span>
-                </div>
+                <div className="text-center text-sm text-gray-500">No admin responses yet</div>
               </div>
             </div>
           </div>
-
-          <div className="bg-white border rounded-lg p-4">
-            <h3 className="font-semibold mb-3">Subject</h3>
-            <p className="text-gray-900">{dispute?.subject}</p>
-          </div>
-
-          <div className="bg-white border rounded-lg p-4">
-            <h3 className="font-semibold mb-3">Description</h3>
-            <p className="text-gray-700 whitespace-pre-wrap">{dispute?.description}</p>
-          </div>
-
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 className="font-semibold mb-3">Communication History</h3>
-            <div className="space-y-3">
-              <div className="bg-white p-3 rounded border-l-4 border-l-blue-500">
-                <div className="flex justify-between items-start mb-2">
-                  <span className="font-medium text-sm">User ({dispute?.user})</span>
-                  <span className="text-xs text-gray-500">{new Date(dispute?.createdDate).toLocaleString()}</span>
-                </div>
-                <p className="text-sm text-gray-700">{dispute?.description}</p>
-              </div>
-              <div className="text-center text-sm text-gray-500">No admin responses yet</div>
-            </div>
-          </div>
-        </div>
-
+        )}
         <div className="flex justify-end pt-4">
           <Button onClick={() => setOpen(false)}>Close</Button>
         </div>

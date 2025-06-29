@@ -34,7 +34,7 @@ export default function FlyChainLanding() {
               <Plane className="w-5 h-5 text-white" />
             </div>
             <span className="text-2xl font-bold bg-gradient-to-r from-red-500 to-blue-600 bg-clip-text text-transparent">
-              FlyChain
+              Avax-reFlights
             </span>
           </div>
           <nav className="hidden md:flex items-center space-x-8">
@@ -336,17 +336,23 @@ export default function FlyChainLanding() {
       <section id="partners" className="py-16 px-4 bg-gradient-to-r from-red-50 to-blue-50">
         <div className="container mx-auto max-w-4xl text-center">
           <h2 className="text-3xl font-bold mb-8">Powered By Industry Leaders</h2>
-          <div className="flex justify-center items-center space-x-12 opacity-70">
+          <div className="flex justify-center items-center space-x-12 opacity-80">
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">CL</span>
-              </div>
+              <img
+                src="https://cdn.prod.website-files.com/5f6b7190899f41fb70882d08/6656037210b1691e305622e4_logo.svg"
+                alt="Chainlink Logo"
+                className="w-12 h-12 object-contain"
+                style={{ background: "white", borderRadius: "0.5rem", padding: 4 }}
+              />
               <span className="text-2xl font-bold text-blue-600">Chainlink</span>
             </div>
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-red-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">A</span>
-              </div>
+              <img
+                src="https://upload.wikimedia.org/wikipedia/commons/5/5a/Avalanche_logo_without_text.svg"
+                alt="Avalanche Logo"
+                className="w-12 h-12 object-contain"
+                style={{ background: "white", borderRadius: "0.5rem", padding: 4 }}
+              />
               <span className="text-2xl font-bold text-red-500">Avalanche</span>
             </div>
           </div>
@@ -366,7 +372,7 @@ export default function FlyChainLanding() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <UnifiedConnectButton
               size="lg"
-              variant="secondary"
+              variant="outline"
               className="bg-white text-gray-900 hover:bg-gray-100"
               showRoleSwitch={true}
             />
@@ -394,7 +400,7 @@ export default function FlyChainLanding() {
                 <div className="w-8 h-8 bg-gradient-to-r from-red-500 to-blue-600 rounded-lg flex items-center justify-center">
                   <Plane className="w-5 h-5 text-white" />
                 </div>
-                <span className="text-2xl font-bold">FlyChain</span>
+                <span className="text-2xl font-bold">Avax-reFlights</span>
               </div>
               <p className="text-gray-400">Fly freely. Fly fairly. The decentralized future of travel.</p>
             </div>
@@ -479,7 +485,7 @@ export default function FlyChainLanding() {
           </div>
 
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 FlyChain. All rights reserved. Built on Avalanche. Powered by Chainlink.</p>
+            <p>&copy; 2025 Avax-reFlights. All rights reserved. Built on Avalanche. Powered by Chainlink.</p>
           </div>
         </div>
       </footer>

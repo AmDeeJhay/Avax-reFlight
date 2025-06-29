@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/hooks/use-toast"
 import { Download } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { fetchFromApi } from "@/lib/api"
 
 interface UserExportModalProps {
   trigger?: React.ReactNode
@@ -27,31 +29,32 @@ export function UserExportModal({ trigger }: UserExportModalProps) {
     kycStatus: true,
     lastActivity: true,
   })
+  const [loading, setLoading] = useState(false)
   const { toast } = useToast()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    // API call would go here
-    fetch("/api/admin/users/export", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ exportType, format, includeFields }),
-    })
-      .then(() => {
-        toast({
-          title: "Export Started",
-          description: "User data export is being processed and will be downloaded shortly.",
-        })
-        setOpen(false)
+    setLoading(true)
+    try {
+      await fetchFromApi("admin/users/export", {
+        method: "POST",
+        body: JSON.stringify({ exportType, format, includeFields }),
+        headers: { "Content-Type": "application/json" },
       })
-      .catch(() => {
-        toast({
-          title: "Export Failed",
-          description: "Failed to export user data. Please try again.",
-          variant: "destructive",
-        })
+      toast({
+        title: "Export Started",
+        description: "User data export is being processed and will be downloaded shortly.",
       })
+      setOpen(false)
+    } catch {
+      toast({
+        title: "Export Failed",
+        description: "Failed to export user data. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleFieldChange = (field: string, checked: boolean) => {
@@ -68,79 +71,88 @@ export function UserExportModal({ trigger }: UserExportModalProps) {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Download className="w-5 h-5" />
             Export User Data
           </DialogTitle>
         </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="exportType">Export Type</Label>
-            <Select value={exportType} onValueChange={setExportType} required>
-              <SelectTrigger>
-                <SelectValue placeholder="Select export type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all-users">All Users</SelectItem>
-                <SelectItem value="active-users">Active Users Only</SelectItem>
-                <SelectItem value="suspended-users">Suspended Users Only</SelectItem>
-                <SelectItem value="kyc-verified">KYC Verified Users</SelectItem>
-                <SelectItem value="kyc-pending">KYC Pending Users</SelectItem>
-              </SelectContent>
-            </Select>
+        {loading ? (
+          <div className="space-y-6">
+            <Skeleton className="h-8 w-48 mb-2" />
+            <Skeleton className="h-4 w-64" />
+            <Skeleton className="h-10 w-full mb-2" />
+            <Skeleton className="h-10 w-full mb-2" />
+            <Skeleton className="h-10 w-full mb-2" />
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="format">Export Format</Label>
-            <Select value={format} onValueChange={setFormat}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="csv">CSV</SelectItem>
-                <SelectItem value="excel">Excel</SelectItem>
-                <SelectItem value="json">JSON</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-4">
-            <Label>Include Fields</Label>
-            <div className="grid grid-cols-2 gap-4">
-              {Object.entries(includeFields).map(([field, checked]) => (
-                <div key={field} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={field}
-                    checked={checked}
-                    onCheckedChange={(checked) => handleFieldChange(field, checked as boolean)}
-                  />
-                  <Label htmlFor={field} className="text-sm capitalize">
-                    {field.replace(/([A-Z])/g, " $1").trim()}
-                  </Label>
-                </div>
-              ))}
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="exportType">Export Type</Label>
+              <Select value={exportType} onValueChange={setExportType} required>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select export type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all-users">All Users</SelectItem>
+                  <SelectItem value="active-users">Active Users Only</SelectItem>
+                  <SelectItem value="suspended-users">Suspended Users Only</SelectItem>
+                  <SelectItem value="kyc-verified">KYC Verified Users</SelectItem>
+                  <SelectItem value="kyc-pending">KYC Pending Users</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
-          </div>
 
-          <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
-            <p className="text-sm text-yellow-800">
-              <strong>Privacy Notice:</strong> Exported data contains sensitive user information. Handle according to
-              privacy policies and regulations.
-            </p>
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="format">Export Format</Label>
+              <Select value={format} onValueChange={setFormat}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="csv">CSV</SelectItem>
+                  <SelectItem value="excel">Excel</SelectItem>
+                  <SelectItem value="json">JSON</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              Cancel
-            </Button>
-            <Button type="submit" className="bg-gradient-to-r from-red-500 to-blue-600">
-              Export Data
-            </Button>
-          </div>
-        </form>
+            <div className="space-y-4">
+              <Label>Include Fields</Label>
+              <div className="grid grid-cols-2 gap-4">
+                {Object.entries(includeFields).map(([field, checked]) => (
+                  <div key={field} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={field}
+                      checked={checked}
+                      onCheckedChange={(checked) => handleFieldChange(field, checked as boolean)}
+                    />
+                    <Label htmlFor={field} className="text-sm capitalize">
+                      {field.replace(/([A-Z])/g, " $1").trim()}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg">
+              <p className="text-sm text-yellow-800">
+                <strong>Privacy Notice:</strong> Exported data contains sensitive user information. Handle according to
+                privacy policies and regulations.
+              </p>
+            </div>
+
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" className="bg-gradient-to-r from-red-500 to-blue-600">
+                Export Data
+              </Button>
+            </div>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   )

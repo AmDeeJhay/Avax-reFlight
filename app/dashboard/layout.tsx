@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils"
 import { UnifiedConnectButton } from "@/components/wallet/unified-connect-button"
 import { PageTransition } from "@/components/animations/page-transition"
 import { NotificationPanel } from "@/components/notifications/notification-panel"
+import { Badge } from "@/components/ui/badge"
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
@@ -134,7 +135,8 @@ export default function DashboardLayout({
 
           <div className="flex flex-1 gap-x-4 self-stretch lg:gap-x-6">
             <div className="flex flex-1 items-center">
-              <Button onClick={() => router.push("/")} variant="ghost" size="sm" className="lg:hidden">
+              <Badge className="bg-blue-100 text-blue-800 text-xs">User Panel</Badge>
+              <Button onClick={() => router.push("/")} variant="ghost" size="sm" className="ml-4 lg:hidden">
                 <ArrowLeft className="w-4 h-4 mr-2 flex-shrink-0" />
                 <span className="truncate">Home</span>
               </Button>

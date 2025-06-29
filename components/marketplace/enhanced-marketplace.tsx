@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -22,124 +22,32 @@ import {
   Clock,
   MapPin,
   Plane,
+  Loader2,
 } from "lucide-react"
-
-interface SellerReputation {
-  level: "New" | "Silver" | "Gold" | "Platinum" | "Diamond"
-  rating: number
-  totalSales: number
-  joinDate: string
-  badges: string[]
-  verified: boolean
-}
-
-interface MarketplaceListing {
-  id: string
-  seller: {
-    address: string
-    reputation: SellerReputation
-  }
-  ticket: {
-    route: { from: string; to: string; fromFull: string; toFull: string }
-    date: string
-    time: string
-    class: string
-    seat: string
-    airline: string
-    flightNumber: string
-    nftId: string
-  }
-  pricing: {
-    originalPrice: number
-    listingPrice: number
-    discount: number
-  }
-  listing: {
-    timeLeft: string
-    description: string
-    negotiable: boolean
-    instantBuy: boolean
-  }
-}
-
-const mockListings: MarketplaceListing[] = [
-  {
-    id: "LST-001",
-    seller: {
-      address: "0x1234...5678",
-      reputation: {
-        level: "Platinum",
-        rating: 4.9,
-        totalSales: 127,
-        joinDate: "2023-01-15",
-        badges: ["Top Seller", "Fast Shipper", "Verified"],
-        verified: true,
-      },
-    },
-    ticket: {
-      route: { from: "NYC", to: "LAX", fromFull: "New York", toFull: "Los Angeles" },
-      date: "2024-12-18",
-      time: "14:30",
-      class: "Business",
-      seat: "6C",
-      airline: "SkyLink Airways",
-      flightNumber: "SL 1234",
-      nftId: "NFT-12348",
-    },
-    pricing: {
-      originalPrice: 0.89,
-      listingPrice: 0.75,
-      discount: 16,
-    },
-    listing: {
-      timeLeft: "2 days",
-      description: "Can't make this trip anymore. Great business class seat with extra legroom!",
-      negotiable: true,
-      instantBuy: true,
-    },
-  },
-  {
-    id: "LST-002",
-    seller: {
-      address: "0x5678...9012",
-      reputation: {
-        level: "Gold",
-        rating: 4.7,
-        totalSales: 45,
-        joinDate: "2023-06-20",
-        badges: ["Reliable", "Good Communication"],
-        verified: true,
-      },
-    },
-    ticket: {
-      route: { from: "LAX", to: "MIA", fromFull: "Los Angeles", toFull: "Miami" },
-      date: "2024-12-22",
-      time: "09:15",
-      class: "Economy",
-      seat: "15A",
-      airline: "ChainFly",
-      flightNumber: "CF 5678",
-      nftId: "NFT-12349",
-    },
-    pricing: {
-      originalPrice: 0.42,
-      listingPrice: 0.35,
-      discount: 17,
-    },
-    listing: {
-      timeLeft: "5 days",
-      description: "Window seat, perfect for photos! Selling due to schedule change.",
-      negotiable: false,
-      instantBuy: true,
-    },
-  },
-]
+import { getMarketplaceListings, buyTicket } from "@/lib/api"
+import { MarketplaceListing } from "@/lib/types"
 
 export function EnhancedMarketplace() {
-  const [listings] = useState(mockListings)
+  const [listings, setListings] = useState<MarketplaceListing[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [sortBy, setSortBy] = useState("price-low")
   const [filterBy, setFilterBy] = useState("all")
+  const [buyingId, setBuyingId] = useState<string | null>(null)
+  const [successMsg, setSuccessMsg] = useState<string | null>(null)
+  const [fetching, setFetching] = useState(false)
+
+  useEffect(() => {
+    setLoading(true)
+    getMarketplaceListings()
+      .then((data) => {
+        setListings(data)
+        setError(null)
+      })
+      .catch(() => setError("Failed to load listings"))
+      .finally(() => setLoading(false))
+  }, [])
 
   const getReputationIcon = (level: string) => {
     switch (level) {
@@ -171,17 +79,71 @@ export function EnhancedMarketplace() {
     }
   }
 
-  const handleBuyTicket = (listing: MarketplaceListing) => {
-    console.log("Buying ticket:", listing)
+  const handleBuyTicket = async (listing: MarketplaceListing) => {
+    setBuyingId(listing.id)
+    setSuccessMsg(null)
+    try {
+      await buyTicket(listing.ticket.nftId)
+      setSuccessMsg("Purchase successful!")
+      // Optionally, refresh listings here
+    } catch (e) {
+      setError("Purchase failed. Please try again.")
+    } finally {
+      setBuyingId(null)
+    }
   }
 
   const handleMakeOffer = (listing: MarketplaceListing) => {
-    console.log("Making offer for:", listing)
+    // Implement offer logic if needed
+    alert("Offer functionality coming soon!")
   }
+
+  const fetchListings = async () => {
+    setFetching(true)
+    setError(null)
+    setSuccessMsg(null)
+    try {
+      const data = await getMarketplaceListings()
+      setListings(data)
+    } catch {
+      setError("Failed to load listings")
+    } finally {
+      setFetching(false)
+    }
+  }
+
+  // Optionally filter/sort listings here
+  let filteredListings = listings.filter((listing) => {
+    const search = searchTerm.toLowerCase()
+    return (
+      listing.ticket.route.fromFull.toLowerCase().includes(search) ||
+      listing.ticket.route.toFull.toLowerCase().includes(search) ||
+      listing.ticket.airline.toLowerCase().includes(search) ||
+      listing.seller.address.toLowerCase().includes(search)
+    )
+  })
+  if (filterBy === "verified") filteredListings = filteredListings.filter((l) => l.seller.reputation.verified)
+  if (filterBy === "negotiable") filteredListings = filteredListings.filter((l) => l.listing.negotiable)
+  if (filterBy === "instant") filteredListings = filteredListings.filter((l) => l.listing.instantBuy)
+  if (sortBy === "price-low") filteredListings = filteredListings.sort((a, b) => a.pricing.listingPrice - b.pricing.listingPrice)
+  if (sortBy === "price-high") filteredListings = filteredListings.sort((a, b) => b.pricing.listingPrice - a.pricing.listingPrice)
+  if (sortBy === "discount") filteredListings = filteredListings.sort((a, b) => b.pricing.discount - a.pricing.discount)
+  if (sortBy === "rating") filteredListings = filteredListings.sort((a, b) => b.seller.reputation.rating - a.seller.reputation.rating)
+  if (sortBy === "time") filteredListings = filteredListings.sort((a, b) => a.listing.timeLeft.localeCompare(b.listing.timeLeft))
+
+  if (loading) return <div>Loading marketplace...</div>
+  if (error) return <div className="text-red-500">{error}</div>
 
   return (
     <div className="space-y-6">
+      {successMsg && <div className="text-green-600 font-semibold">{successMsg}</div>}
       {/* Search and Filters */}
+      <div className="flex justify-end mb-2">
+        <Button onClick={fetchListings} disabled={fetching} className="flex items-center gap-2">
+          {fetching && <Loader2 className="animate-spin w-4 h-4" />}
+          {fetching ? "Fetching..." : "Fetch Listings"}
+        </Button>
+      </div>
       <Card>
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row gap-4">
@@ -255,7 +217,7 @@ export function EnhancedMarketplace() {
 
       {/* Listings */}
       <div className="space-y-4">
-        {listings.map((listing) => (
+        {filteredListings.map((listing) => (
           <motion.div
             key={listing.id}
             initial={{ opacity: 0, y: 20 }}
@@ -365,9 +327,10 @@ export function EnhancedMarketplace() {
                         <Button
                           className="w-full bg-gradient-to-r from-red-500 to-blue-600 hover:from-red-600 hover:to-blue-700"
                           onClick={() => handleBuyTicket(listing)}
+                          disabled={buyingId === listing.id}
                         >
                           <ShoppingCart className="w-4 h-4 mr-2" />
-                          Buy Now
+                          {buyingId === listing.id ? "Processing..." : "Buy Now"}
                         </Button>
                       )}
 

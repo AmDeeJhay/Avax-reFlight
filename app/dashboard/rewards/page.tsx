@@ -1,5 +1,7 @@
 "use client"
 
+import { useEffect, useState } from "react"
+import { getUserRewards } from "@/lib/user-dashboard-api"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -20,66 +22,38 @@ import {
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
-const userStats = {
-  currentTier: "Silver",
-  points: 4250,
-  nextTierPoints: 6700,
-  totalFlights: 12,
-  ticketsResold: 7,
-  earlyRefunds: 3,
-  memberSince: "2024-01-15",
-}
-
-const tiers = [
-  { name: "Bronze", minPoints: 0, color: "bg-amber-600", benefits: ["5% booking discount", "Basic support"] },
-  {
-    name: "Silver",
-    minPoints: 2500,
-    color: "bg-gray-400",
-    benefits: ["10% booking discount", "Priority support", "Free seat selection"],
-  },
-  {
-    name: "Gold",
-    minPoints: 6700,
-    color: "bg-yellow-500",
-    benefits: ["15% booking discount", "Premium support", "Free upgrades", "Lounge access"],
-  },
-  {
-    name: "Platinum",
-    minPoints: 15000,
-    color: "bg-purple-600",
-    benefits: ["20% booking discount", "VIP support", "Guaranteed upgrades", "Premium lounge access", "Exclusive NFTs"],
-  },
-]
-
-const recentActivities = [
-  { type: "booking", points: 450, description: "Booked NYC → LAX flight", date: "2024-11-20" },
-  { type: "resale", points: 200, description: "Successfully resold MIA → CHI ticket", date: "2024-11-18" },
-  { type: "early_refund", points: 100, description: "Early cancellation (helped liquidity)", date: "2024-11-15" },
-  { type: "referral", points: 500, description: "Friend joined FlyChain", date: "2024-11-10" },
-]
-
-const availableRewards = [
-  { id: 1, name: "10% Flight Discount", cost: 1000, type: "discount", icon: Plane, available: true },
-  { id: 2, name: "Priority Support Badge", cost: 500, type: "badge", icon: Star, available: true },
-  { id: 3, name: "Exclusive Traveler NFT", cost: 2500, type: "nft", icon: Award, available: true },
-  { id: 4, name: "Free Seat Upgrade", cost: 1500, type: "upgrade", icon: TrendingUp, available: true },
-  { id: 5, name: "Lounge Access Pass", cost: 3000, type: "access", icon: Crown, available: false },
-  { id: 6, name: "Premium Traveler Status", cost: 5000, type: "status", icon: Medal, available: false },
-]
-
 export default function Rewards() {
   const { toast } = useToast()
-  const currentTierIndex = tiers.findIndex((tier) => tier.name === userStats.currentTier)
-  const nextTier = tiers[currentTierIndex + 1]
-  const progressToNext = nextTier
-    ? ((userStats.points - tiers[currentTierIndex].minPoints) /
-        (nextTier.minPoints - tiers[currentTierIndex].minPoints)) *
-      100
-    : 100
+  const [rewardsData, setRewardsData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    setLoading(true)
+    getUserRewards()
+      .then((data) => {
+        setRewardsData(data)
+        setLoading(false)
+      })
+      .catch((err) => {
+        setError(typeof err === "string" ? err : "Failed to load rewards")
+        setLoading(false)
+      })
+  }, [])
+
+  const currentTierIndex = rewardsData
+    ? rewardsData.tiers.findIndex((tier: any) => tier.name === rewardsData.userStats.currentTier)
+    : -1
+  const nextTier = currentTierIndex !== -1 ? rewardsData.tiers[currentTierIndex + 1] : null
+  const progressToNext =
+    nextTier && rewardsData.userStats.points
+      ? ((rewardsData.userStats.points - rewardsData.tiers[currentTierIndex].minPoints) /
+          (nextTier.minPoints - rewardsData.tiers[currentTierIndex].minPoints)) *
+        100
+      : 0
 
   const handleRedeemReward = (reward: any) => {
-    if (!reward.available || userStats.points < reward.cost) {
+    if (!reward.available || rewardsData.userStats.points < reward.cost) {
       toast({
         title: "Cannot Redeem",
         description: reward.available ? "Not enough points" : "Reward not available yet",
@@ -100,6 +74,10 @@ export default function Rewards() {
       })
     }, 2000)
   }
+
+  if (loading) return <div className="p-8 text-center">Loading rewards...</div>
+  if (error) return <div className="p-8 text-center text-red-500">{error}</div>
+  if (!rewardsData || currentTierIndex === -1) return <div className="p-8 text-center text-gray-500">No rewards data available.</div>
 
   return (
     <div className="px-4 sm:px-6 lg:px-8">
@@ -123,21 +101,23 @@ export default function Rewards() {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <div className="flex items-center space-x-2 mb-2">
-                  <Badge className={`${tiers[currentTierIndex].color} text-white`}>
-                    {userStats.currentTier} Traveler
+                  <Badge className={`${rewardsData.tiers[currentTierIndex].color} text-white`}>
+                    {rewardsData.userStats.currentTier} Traveler
                   </Badge>
                   <span className="text-sm text-gray-600">
-                    Member since {new Date(userStats.memberSince).toLocaleDateString()}
+                    Member since {new Date(rewardsData.userStats.memberSince).toLocaleDateString()}
                   </span>
                 </div>
-                <p className="text-3xl font-bold text-gray-900">{userStats.points.toLocaleString()} Points</p>
+                <p className="text-3xl font-bold text-gray-900">
+                  {rewardsData.userStats.points.toLocaleString()} Points
+                </p>
               </div>
               <div className="text-right">
                 {nextTier && (
                   <>
                     <p className="text-sm text-gray-600">Next: {nextTier.name}</p>
                     <p className="text-lg font-semibold">
-                      {(nextTier.minPoints - userStats.points).toLocaleString()} points to go
+                      {(nextTier.minPoints - rewardsData.userStats.points).toLocaleString()} points to go
                     </p>
                   </>
                 )}
@@ -147,7 +127,7 @@ export default function Rewards() {
             {nextTier && (
               <div className="mb-6">
                 <div className="flex justify-between text-sm text-gray-600 mb-2">
-                  <span>{tiers[currentTierIndex].name}</span>
+                  <span>{rewardsData.tiers[currentTierIndex].name}</span>
                   <span>{nextTier.name}</span>
                 </div>
                 <Progress value={progressToNext} className="h-3" />
@@ -156,15 +136,15 @@ export default function Rewards() {
 
             <div className="grid grid-cols-3 gap-4 text-center">
               <div>
-                <p className="text-2xl font-bold text-blue-600">{userStats.totalFlights}</p>
+                <p className="text-2xl font-bold text-blue-600">{rewardsData.userStats.totalFlights}</p>
                 <p className="text-sm text-gray-600">Total Flights</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-green-600">{userStats.ticketsResold}</p>
+                <p className="text-2xl font-bold text-green-600">{rewardsData.userStats.ticketsResold}</p>
                 <p className="text-sm text-gray-600">Tickets Resold</p>
               </div>
               <div>
-                <p className="text-2xl font-bold text-purple-600">{userStats.earlyRefunds}</p>
+                <p className="text-2xl font-bold text-purple-600">{rewardsData.userStats.earlyRefunds}</p>
                 <p className="text-sm text-gray-600">Early Refunds</p>
               </div>
             </div>
@@ -177,23 +157,25 @@ export default function Rewards() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {tiers[currentTierIndex].benefits.map((benefit, index) => (
+              {rewardsData.tiers[currentTierIndex]?.benefits?.map((benefit: string, index: number) => (
                 <div key={index} className="flex items-center space-x-2">
                   <Star className="w-4 h-4 text-yellow-500" />
                   <span className="text-sm">{benefit}</span>
                 </div>
               ))}
             </div>
-            {nextTier && (
+            {nextTier && Array.isArray(nextTier.benefits) && (
               <div className="mt-4 pt-4 border-t">
                 <p className="text-sm font-medium text-gray-700 mb-2">Unlock at {nextTier.name}:</p>
                 <div className="space-y-2">
-                  {nextTier.benefits.slice(tiers[currentTierIndex].benefits.length).map((benefit, index) => (
-                    <div key={index} className="flex items-center space-x-2">
-                      <Target className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm text-gray-600">{benefit}</span>
-                    </div>
-                  ))}
+                  {nextTier.benefits
+                    ?.slice(rewardsData.tiers[currentTierIndex]?.benefits?.length || 0)
+                    .map((benefit: string, index: number) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <Target className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm text-gray-600">{benefit}</span>
+                      </div>
+                    ))}
                 </div>
               </div>
             )}
@@ -208,7 +190,7 @@ export default function Rewards() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {recentActivities.map((activity, index) => (
+            {rewardsData.recentActivities.map((activity, index) => (
               <div key={index} className="flex items-center justify-between py-3 border-b last:border-b-0">
                 <div className="flex items-center space-x-3">
                   <div
@@ -216,10 +198,10 @@ export default function Rewards() {
                       activity.type === "booking"
                         ? "bg-blue-100"
                         : activity.type === "resale"
-                          ? "bg-green-100"
-                          : activity.type === "early_refund"
-                            ? "bg-purple-100"
-                            : "bg-yellow-100"
+                        ? "bg-green-100"
+                        : activity.type === "early_refund"
+                        ? "bg-purple-100"
+                        : "bg-yellow-100"
                     }`}
                   >
                     {activity.type === "booking" && <Plane className="w-4 h-4 text-blue-600" />}
@@ -248,9 +230,9 @@ export default function Rewards() {
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {availableRewards.map((reward) => {
+            {rewardsData.availableRewards.map((reward: any) => {
               const Icon = reward.icon
-              const canAfford = userStats.points >= reward.cost
+              const canAfford = rewardsData.userStats.points >= reward.cost
 
               return (
                 <Card

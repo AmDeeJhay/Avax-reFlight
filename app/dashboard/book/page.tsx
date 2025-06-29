@@ -1,4 +1,5 @@
 "use client"
+import { fetchFromApi } from "@/lib/api";
 
 import { useState } from "react"
 import { motion } from "framer-motion"
@@ -14,55 +15,7 @@ import { SeatSelection } from "@/components/booking/seat-selection"
 import { useToast } from "@/hooks/use-toast"
 import { Search, Calendar, Users, Plane, Wifi, Coffee, Monitor, Star, ArrowRight } from "lucide-react"
 import { AirportSelector } from "@/components/booking/airport-selector"
-
-// Mock flight data with enhanced details
-const mockFlights = [
-  {
-    id: "SL1234",
-    airline: "SkyLink Airways",
-    flightNumber: "SL 1234",
-    departure: { city: "New York", code: "NYC", time: "08:30", airport: "JFK" },
-    arrival: { city: "Los Angeles", code: "LAX", time: "11:45", airport: "LAX" },
-    duration: "5h 15m",
-    price: { economy: 0.45, business: 0.89, first: 1.25 },
-    amenities: ["wifi", "meals", "entertainment"],
-    stops: 0,
-    aircraft: "Boeing 737",
-    rating: 4.8,
-    carbonFootprint: 0.85,
-    onTimePerformance: 92,
-  },
-  {
-    id: "CF5678",
-    airline: "ChainFly",
-    flightNumber: "CF 5678",
-    departure: { city: "New York", code: "NYC", time: "14:15", airport: "JFK" },
-    arrival: { city: "Los Angeles", code: "LAX", time: "17:30", airport: "LAX" },
-    duration: "5h 15m",
-    price: { economy: 0.42, business: 0.85, first: 1.18 },
-    amenities: ["wifi", "meals", "entertainment", "extra-legroom"],
-    stops: 0,
-    aircraft: "Airbus A320",
-    rating: 4.6,
-    carbonFootprint: 0.78,
-    onTimePerformance: 88,
-  },
-  {
-    id: "AC9012",
-    airline: "AeroChain",
-    flightNumber: "AC 9012",
-    departure: { city: "New York", code: "NYC", time: "18:45", airport: "JFK" },
-    arrival: { city: "Los Angeles", code: "LAX", time: "22:00", airport: "LAX" },
-    duration: "5h 15m",
-    price: { economy: 0.38, business: 0.78, first: 1.12 },
-    amenities: ["wifi", "entertainment"],
-    stops: 0,
-    aircraft: "Boeing 787",
-    rating: 4.4,
-    carbonFootprint: 0.72,
-    onTimePerformance: 85,
-  },
-]
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function BookFlightsPage() {
   const { toast } = useToast()
@@ -73,7 +26,7 @@ export default function BookFlightsPage() {
     passengers: "1",
     class: "economy",
   })
-  const [flights, setFlights] = useState<typeof mockFlights>([])
+  const [flights, setFlights] = useState<any[]>([])
   const [isSearching, setIsSearching] = useState(false)
   const [selectedFlight, setSelectedFlight] = useState<string | null>(null)
   const [showSeatSelection, setShowSeatSelection] = useState(false)
@@ -90,15 +43,31 @@ export default function BookFlightsPage() {
 
     setIsSearching(true)
 
-    // Simulate search delay
-    setTimeout(() => {
-      setFlights(mockFlights)
-      setIsSearching(false)
+    try {
+      // Adjust the endpoint and params as needed for your API
+      const data = await fetchFromApi("flights/search", {
+        from: searchParams.from,
+        to: searchParams.to,
+        departure: searchParams.departure,
+        passengers: searchParams.passengers,
+        class: searchParams.class,
+      });
+      console.log(data) // Debugging line to inspect the API response
+      setFlights(data.flights || data || []) // Adjust if your API returns a different structure
       toast({
         title: "Flights Found",
-        description: `Found ${mockFlights.length} flights for your search.`,
+        description: `Found ${data.flights?.length || data.length || 0} flights for your search.`,
       })
-    }, 2000)
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch flights. Please try again.",
+        variant: "destructive",
+      })
+      setFlights([])
+    } finally {
+      setIsSearching(false)
+    }
   }
 
   const handleBookFlight = (flightId: string) => {
@@ -139,6 +108,57 @@ export default function BookFlightsPage() {
           </Button>
         </div>
         <SeatSelection flightId={selectedFlight} onSeatSelect={handleSeatSelect} />
+      </div>
+    )
+  }
+
+  if (isSearching) {
+    return (
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mb-8">
+          <Skeleton className="h-10 w-48 mb-2" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <Card className="mb-8">
+          <CardHeader>
+            <Skeleton className="h-6 w-40" />
+            <Skeleton className="h-4 w-64 mt-2" />
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="space-y-2">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-10 w-full" />
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-end mt-6">
+              <Skeleton className="h-10 w-32" />
+            </div>
+          </CardContent>
+        </Card>
+        <div className="space-y-6">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <Skeleton className="h-8 w-24" />
+                  <Skeleton className="h-6 w-32" />
+                  <Skeleton className="h-6 w-20" />
+                  <Skeleton className="h-6 w-16" />
+                  <Skeleton className="h-6 w-16" />
+                  <Skeleton className="h-10 w-32 ml-auto" />
+                </div>
+                <div className="flex gap-2 mt-4">
+                  {[...Array(4)].map((_, j) => (
+                    <Skeleton key={j} className="h-4 w-16" />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     )
   }
@@ -329,7 +349,7 @@ export default function BookFlightsPage() {
 
                         {/* Amenities */}
                         <div className="flex flex-wrap gap-2 mb-4">
-                          {flight.amenities.map((amenity) => (
+                          {flight.amenities && flight.amenities.map((amenity: string) => (
                             <Badge key={amenity} variant="outline" className="flex items-center gap-1">
                               {getAmenityIcon(amenity)}
                               <span className="capitalize">{amenity.replace("-", " ")}</span>
@@ -352,7 +372,7 @@ export default function BookFlightsPage() {
                             <span className="text-sm text-gray-600 lg:hidden">Economy:</span>
                             <div>
                               <span className="text-2xl font-bold">
-                                {flight.price[searchParams.class as keyof typeof flight.price]} AVAX
+                                {flight.price && flight.price[searchParams.class as keyof typeof flight.price]} AVAX
                               </span>
                               <p className="text-sm text-gray-600 capitalize">{searchParams.class}</p>
                             </div>

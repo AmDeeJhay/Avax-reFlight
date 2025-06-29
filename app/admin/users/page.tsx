@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -10,47 +10,29 @@ import { Button } from "@/components/ui/button"
 import { Search, MoreVertical, Edit, Ban, Shield, User, Calendar, Ticket, DollarSign, Filter } from "lucide-react"
 import { EditUserModal, VerifyKYCModal, SuspendUserModal } from "@/components/admin/modals/user-management-modals"
 import { UserExportModal } from "@/components/admin/modals/user-export-modal"
-
-const mockUsers = [
-  {
-    id: "USR-001",
-    address: "0x1234567890abcdef1234567890abcdef12345678",
-    status: "active",
-    joinDate: "2024-01-15",
-    totalBookings: 12,
-    totalSpent: 5.67,
-    tier: "Silver",
-    lastActivity: "2024-11-22",
-    kycStatus: "verified",
-  },
-  {
-    id: "USR-002",
-    address: "0x5678901234abcdef5678901234abcdef56789012",
-    status: "active",
-    joinDate: "2024-02-20",
-    totalBookings: 8,
-    totalSpent: 3.45,
-    tier: "Bronze",
-    lastActivity: "2024-11-21",
-    kycStatus: "pending",
-  },
-  {
-    id: "USR-003",
-    address: "0x9012345678abcdef9012345678abcdef90123456",
-    status: "suspended",
-    joinDate: "2024-03-10",
-    totalBookings: 3,
-    totalSpent: 1.23,
-    tier: "Bronze",
-    lastActivity: "2024-11-15",
-    kycStatus: "rejected",
-  },
-]
+import { fetchFromApi } from "@/lib/api"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function UserManagement() {
-  const [users] = useState(mockUsers)
+  const [users, setUsers] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
+
+  useEffect(() => {
+    setLoading(true)
+    fetchFromApi("admin/users")
+      .then((res) => {
+        const apiUsers = res.data?.users || []
+        setUsers(apiUsers)
+        setLoading(false)
+      })
+      .catch((err) => {
+        setError(typeof err === "string" ? err : "Failed to fetch users")
+        setLoading(false)
+      })
+  }, [])
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -124,6 +106,90 @@ export default function UserManagement() {
           `User Profile:\nAddress: ${user.address}\nTier: ${user.tier}\nTotal Bookings: ${user.totalBookings}\nTotal Spent: ${user.totalSpent} AVAX`,
         )
       })
+  }
+
+  if (loading) {
+    return (
+      <div className="px-4 sm:px-6 lg:px-8">
+        <div className="mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <Skeleton className="h-8 w-48 mb-2" />
+              <Skeleton className="h-4 w-64" />
+            </div>
+            <Skeleton className="h-10 w-36 rounded" />
+          </div>
+        </div>
+        <Card className="mb-6">
+          <CardContent className="p-4">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1">
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <div className="flex gap-2">
+                <Skeleton className="h-10 w-32" />
+                <Skeleton className="h-10 w-24" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-4 text-center">
+                <Skeleton className="h-8 w-16 mx-auto mb-2" />
+                <Skeleton className="h-4 w-20 mx-auto" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-40" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[...Array(4)].map((_, i) => (
+                <Card key={i} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-2">
+                          <Skeleton className="h-5 w-32" />
+                          <div className="flex items-center space-x-2 ml-2">
+                            <Skeleton className="h-6 w-16" />
+                            <Skeleton className="h-8 w-8 rounded-full" />
+                          </div>
+                        </div>
+                        <Skeleton className="h-4 w-64 mb-3" />
+                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
+                          {[...Array(4)].map((_, j) => (
+                            <Skeleton key={j} className="h-4 w-32" />
+                          ))}
+                        </div>
+                        <div className="bg-gray-50 rounded-lg p-3">
+                          <div className="grid grid-cols-3 gap-3 text-xs">
+                            {[...Array(3)].map((_, j) => (
+                              <Skeleton key={j} className="h-4 w-20" />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right ml-4 flex-shrink-0">
+                        <Skeleton className="h-10 w-24" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+  if (error) {
+    return <div className="p-8 text-center text-red-600">{error}</div>
   }
 
   return (

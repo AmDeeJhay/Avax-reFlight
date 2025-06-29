@@ -6,9 +6,28 @@ import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/hooks/use-toast"
 import { BarChart3, TrendingUp, Users, Plane, DollarSign, Ticket, Download, RefreshCw } from "lucide-react"
+import { useEffect, useState } from "react"
+import { fetchFromApi } from "@/lib/api"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function Analytics() {
   const { toast } = useToast()
+  const [stats, setStats] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    setLoading(true)
+    fetchFromApi("admin/analytics")
+      .then((res) => {
+        setStats(res.data)
+        setLoading(false)
+      })
+      .catch((err) => {
+        setError(typeof err === "string" ? err : "Failed to fetch analytics")
+        setLoading(false)
+      })
+  }, [])
 
   const handleExportReport = () => {
     toast({
@@ -36,6 +55,70 @@ export default function Analytics() {
         description: "Analytics dashboard has been refreshed",
       })
     }, 1500)
+  }
+
+  if (loading) {
+    return (
+      <div className="px-4 sm:px-6 lg:px-8">
+        <div className="mb-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <Skeleton className="h-8 w-48 mb-2" />
+              <Skeleton className="h-4 w-64" />
+            </div>
+            <div className="flex space-x-2">
+              <Skeleton className="h-10 w-24" />
+              <Skeleton className="h-10 w-32" />
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-4">
+                <Skeleton className="h-4 w-24 mb-2" />
+                <Skeleton className="h-8 w-32 mb-2" />
+                <Skeleton className="h-4 w-20" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+          {[...Array(2)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {[...Array(3)].map((_, j) => (
+                    <Skeleton key={j} className="h-4 w-40" />
+                  ))}
+                  <Skeleton className="h-2 w-full" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-10 w-24 mx-auto mb-2" />
+                <Skeleton className="h-3 w-full mb-2" />
+                <Skeleton className="h-4 w-32 mx-auto" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    )
+  }
+  if (error) {
+    return <div className="p-8 text-center text-red-600">{error}</div>
   }
 
   return (
@@ -66,7 +149,7 @@ export default function Analytics() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-gray-600">Total Revenue</p>
-                <p className="text-xl font-bold text-gray-900">456.7 AVAX</p>
+                <p className="text-xl font-bold text-gray-900">{stats.totalRevenue} AVAX</p>
               </div>
               <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
                 <DollarSign className="w-5 h-5 text-green-600" />
@@ -74,7 +157,7 @@ export default function Analytics() {
             </div>
             <div className="mt-2 flex items-center text-xs">
               <TrendingUp className="w-3 h-3 text-green-500 mr-1" />
-              <span className="text-green-600">+15% from last month</span>
+              <span className="text-green-600">{stats.revenueGrowth}% from last month</span>
             </div>
           </CardContent>
         </Card>
@@ -84,7 +167,7 @@ export default function Analytics() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-gray-600">Total Bookings</p>
-                <p className="text-xl font-bold text-gray-900">1,247</p>
+                <p className="text-xl font-bold text-gray-900">{stats.totalBookings}</p>
               </div>
               <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                 <Plane className="w-5 h-5 text-blue-600" />
@@ -92,7 +175,7 @@ export default function Analytics() {
             </div>
             <div className="mt-2 flex items-center text-xs">
               <TrendingUp className="w-3 h-3 text-green-500 mr-1" />
-              <span className="text-green-600">+12% from last month</span>
+              <span className="text-green-600">{stats.bookingGrowth}% from last month</span>
             </div>
           </CardContent>
         </Card>
@@ -102,7 +185,7 @@ export default function Analytics() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-gray-600">Active Users</p>
-                <p className="text-xl font-bold text-gray-900">2,341</p>
+                <p className="text-xl font-bold text-gray-900">{stats.activeUsers}</p>
               </div>
               <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
                 <Users className="w-5 h-5 text-purple-600" />
@@ -110,7 +193,7 @@ export default function Analytics() {
             </div>
             <div className="mt-2 flex items-center text-xs">
               <TrendingUp className="w-3 h-3 text-green-500 mr-1" />
-              <span className="text-green-600">+23% from last month</span>
+              <span className="text-green-600">{stats.userGrowth}% from last month</span>
             </div>
           </CardContent>
         </Card>
@@ -120,7 +203,7 @@ export default function Analytics() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-gray-600">NFT Tickets</p>
-                <p className="text-xl font-bold text-gray-900">892</p>
+                <p className="text-xl font-bold text-gray-900">{stats.nftTickets}</p>
               </div>
               <div className="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
                 <Ticket className="w-5 h-5 text-yellow-600" />
@@ -128,7 +211,7 @@ export default function Analytics() {
             </div>
             <div className="mt-2 flex items-center text-xs">
               <TrendingUp className="w-3 h-3 text-green-500 mr-1" />
-              <span className="text-green-600">+8% from last week</span>
+              <span className="text-green-600">{stats.ticketGrowth}% from last week</span>
             </div>
           </CardContent>
         </Card>
@@ -147,21 +230,21 @@ export default function Analytics() {
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">This Month</span>
-                <span className="text-sm font-medium">156.7 AVAX</span>
+                <span className="text-sm font-medium">{stats.revenueThisMonth} AVAX</span>
               </div>
-              <Progress value={85} className="h-2" />
+              <Progress value={stats.revenueProgress} className="h-2" />
 
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Last Month</span>
-                <span className="text-sm font-medium">134.2 AVAX</span>
+                <span className="text-sm font-medium">{stats.revenueLastMonth} AVAX</span>
               </div>
-              <Progress value={72} className="h-2" />
+              <Progress value={stats.lastMonthRevenueProgress} className="h-2" />
 
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Two Months Ago</span>
-                <span className="text-sm font-medium">98.5 AVAX</span>
+                <span className="text-sm font-medium">{stats.revenueTwoMonthsAgo} AVAX</span>
               </div>
-              <Progress value={53} className="h-2" />
+              <Progress value={stats.twoMonthsAgoRevenueProgress} className="h-2" />
             </div>
           </CardContent>
         </Card>
@@ -173,37 +256,15 @@ export default function Analytics() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">NYC → LAX</p>
-                  <p className="text-xs text-gray-600">234 bookings</p>
+              {stats.topRoutes.map((route: any, i: number) => (
+                <div key={i} className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium">{route.path}</p>
+                    <p className="text-xs text-gray-600">{route.bookings} bookings</p>
+                  </div>
+                  <Badge className="bg-green-100 text-green-800 text-xs">{route.growth}%</Badge>
                 </div>
-                <Badge className="bg-green-100 text-green-800 text-xs">+18%</Badge>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">LAX → MIA</p>
-                  <p className="text-xs text-gray-600">189 bookings</p>
-                </div>
-                <Badge className="bg-blue-100 text-blue-800 text-xs">+12%</Badge>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">MIA → CHI</p>
-                  <p className="text-xs text-gray-600">156 bookings</p>
-                </div>
-                <Badge className="bg-purple-100 text-purple-800 text-xs">+8%</Badge>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium">CHI → SEA</p>
-                  <p className="text-xs text-gray-600">134 bookings</p>
-                </div>
-                <Badge className="bg-red-100 text-red-800 text-xs">-3%</Badge>
-              </div>
+              ))}
             </div>
           </CardContent>
         </Card>
@@ -217,8 +278,8 @@ export default function Analytics() {
           </CardHeader>
           <CardContent>
             <div className="text-center">
-              <p className="text-3xl font-bold text-green-600 mb-2">98.5%</p>
-              <Progress value={98.5} className="h-3 mb-2" />
+              <p className="text-3xl font-bold text-green-600 mb-2">{stats.bookingSuccessRate}%</p>
+              <Progress value={stats.bookingSuccessRate} className="h-3 mb-2" />
               <p className="text-xs text-gray-600">Successful transactions</p>
             </div>
           </CardContent>
@@ -230,8 +291,8 @@ export default function Analytics() {
           </CardHeader>
           <CardContent>
             <div className="text-center">
-              <p className="text-3xl font-bold text-blue-600 mb-2">4.8/5</p>
-              <Progress value={96} className="h-3 mb-2" />
+              <p className="text-3xl font-bold text-blue-600 mb-2">{stats.userSatisfaction}/5</p>
+              <Progress value={stats.userSatisfaction * 20} className="h-3 mb-2" />
               <p className="text-xs text-gray-600">Average rating</p>
             </div>
           </CardContent>
@@ -243,8 +304,8 @@ export default function Analytics() {
           </CardHeader>
           <CardContent>
             <div className="text-center">
-              <p className="text-3xl font-bold text-purple-600 mb-2">2.3%</p>
-              <Progress value={23} className="h-3 mb-2" />
+              <p className="text-3xl font-bold text-purple-600 mb-2">{stats.refundRate}%</p>
+              <Progress value={stats.refundRate} className="h-3 mb-2" />
               <p className="text-xs text-gray-600">Of total bookings</p>
             </div>
           </CardContent>

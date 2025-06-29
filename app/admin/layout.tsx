@@ -59,7 +59,7 @@ export default function AdminLayout({
               <div className="w-8 h-8 bg-gradient-to-r from-red-500 to-blue-600 rounded-lg flex items-center justify-center">
                 <Shield className="w-5 h-5 text-white" />
               </div>
-              <span className="text-lg font-bold">FlyChain Admin</span>
+              <span className="text-lg font-bold">Avax-reFlights Admin</span>
             </div>
             <Button variant="ghost" size="sm" onClick={() => setSidebarOpen(false)}>
               <X className="w-5 h-5" />
@@ -104,7 +104,7 @@ export default function AdminLayout({
               <div className="w-8 h-8 bg-gradient-to-r from-red-500 to-blue-600 rounded-lg flex items-center justify-center">
                 <Shield className="w-5 h-5 text-white" />
               </div>
-              <span className="text-lg font-bold">FlyChain Admin</span>
+              <span className="text-lg font-bold">Avax-reFlights</span>
             </div>
           </div>
           <nav className="flex-1 px-4 py-4 space-y-2">

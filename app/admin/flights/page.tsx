@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { fetchFromApi } from "@/lib/api"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -13,57 +14,28 @@ import { AddFlightModal } from "@/components/admin/modals/add-flight-modal"
 import { EditFlightModal } from "@/components/admin/modals/edit-flight-modal"
 import { RescheduleFlightModal } from "@/components/admin/modals/reschedule-flight-modal"
 import { FlightDetailsModal } from "@/components/admin/modals/flight-details-modal"
-
-const mockFlights = [
-  {
-    id: "SL1234",
-    airline: "SkyLink Airways",
-    flightNumber: "SL 1234",
-    route: { from: "NYC", to: "LAX", fromFull: "New York", toFull: "Los Angeles" },
-    departure: { date: "2024-12-15", time: "08:30", airport: "JFK" },
-    arrival: { date: "2024-12-15", time: "11:45", airport: "LAX" },
-    duration: "5h 15m",
-    aircraft: "Boeing 737",
-    capacity: { economy: 150, business: 20, first: 8 },
-    booked: { economy: 120, business: 15, first: 6 },
-    pricing: { economy: 0.45, business: 0.89, first: 1.25 },
-    status: "active",
-  },
-  {
-    id: "CF5678",
-    airline: "ChainFly",
-    flightNumber: "CF 5678",
-    route: { from: "LAX", to: "MIA", fromFull: "Los Angeles", toFull: "Miami" },
-    departure: { date: "2024-12-16", time: "14:15", airport: "LAX" },
-    arrival: { date: "2024-12-16", time: "22:30", airport: "MIA" },
-    duration: "5h 15m",
-    aircraft: "Airbus A320",
-    capacity: { economy: 140, business: 16, first: 6 },
-    booked: { economy: 95, business: 12, first: 4 },
-    pricing: { economy: 0.42, business: 0.85, first: 1.18 },
-    status: "active",
-  },
-  {
-    id: "AC9012",
-    airline: "AeroChain",
-    flightNumber: "AC 9012",
-    route: { from: "MIA", to: "CHI", fromFull: "Miami", toFull: "Chicago" },
-    departure: { date: "2024-12-17", time: "18:45", airport: "MIA" },
-    arrival: { date: "2024-12-17", time: "21:00", airport: "ORD" },
-    duration: "2h 15m",
-    aircraft: "Boeing 787",
-    capacity: { economy: 180, business: 24, first: 12 },
-    booked: { economy: 45, business: 8, first: 2 },
-    pricing: { economy: 0.38, business: 0.78, first: 1.12 },
-    status: "delayed",
-  },
-]
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function FlightManagement() {
-  const [flights] = useState(mockFlights)
+  const [flights, setFlights] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const { toast } = useToast()
+
+  useEffect(() => {
+    setLoading(true)
+    fetchFromApi("flights")
+      .then((res) => {
+        setFlights(res.data.flights || [])
+        setLoading(false)
+      })
+      .catch((err) => {
+        setError(typeof err === "string" ? err : "Failed to fetch flights")
+        setLoading(false)
+      })
+  }, [])
 
   const handleCancelFlight = (flight: any) => {
     if (confirm(`Are you sure you want to cancel flight ${flight.flightNumber}?`)) {
@@ -95,15 +67,102 @@ export default function FlightManagement() {
 
   const filteredFlights = flights.filter((flight) => {
     const matchesSearch =
-      flight.flightNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      flight.airline.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      flight.route.fromFull.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      flight.route.toFull.toLowerCase().includes(searchTerm.toLowerCase())
+      (flight.flightNumber?.toLowerCase().includes(searchTerm.toLowerCase()) || "") ||
+      (flight.airline?.toLowerCase().includes(searchTerm.toLowerCase()) || "") ||
+      (flight.route?.fromFull?.toLowerCase().includes(searchTerm.toLowerCase()) || "") ||
+      (flight.route?.toFull?.toLowerCase().includes(searchTerm.toLowerCase()) || "")
 
     const matchesStatus = statusFilter === "all" || flight.status === statusFilter
 
     return matchesSearch && matchesStatus
   })
+
+  if (loading) {
+    return (
+      <div className="px-4 sm:px-6 lg:px-8">
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <Skeleton className="h-10 w-64 mb-2" />
+              <Skeleton className="h-5 w-80" />
+            </div>
+            <Skeleton className="h-10 w-36 rounded" />
+          </div>
+        </div>
+        {/* Search and Filters Skeleton */}
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1">
+                <Skeleton className="h-10 w-full" />
+              </div>
+              <div className="flex gap-2">
+                <Skeleton className="h-10 w-40" />
+                <Skeleton className="h-10 w-32" />
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+        {/* Stats Skeleton */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardContent className="p-4 text-center">
+                <Skeleton className="h-10 w-20 mx-auto mb-2" />
+                <Skeleton className="h-5 w-24 mx-auto" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        {/* Flights Table Skeleton */}
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-7 w-48" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {[...Array(4)].map((_, i) => (
+                <Card key={i} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between mb-2">
+                          <Skeleton className="h-6 w-40" />
+                          <div className="flex items-center space-x-2">
+                            <Skeleton className="h-6 w-20" />
+                            <Skeleton className="h-8 w-8 rounded-full" />
+                          </div>
+                        </div>
+                        <Skeleton className="h-4 w-64 mb-4" />
+                        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                          {[...Array(4)].map((_, j) => (
+                            <Skeleton key={j} className="h-4 w-32" />
+                          ))}
+                        </div>
+                        <div className="grid md:grid-cols-3 gap-4">
+                          {[...Array(3)].map((_, j) => (
+                            <Skeleton key={j} className="h-16 w-full" />
+                          ))}
+                        </div>
+                      </div>
+                      <div className="text-right ml-6">
+                        <Skeleton className="h-5 w-32 mb-2" />
+                        <Skeleton className="h-6 w-24 mb-4" />
+                        <Skeleton className="h-10 w-32" />
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+  if (error) {
+    return <div className="p-8 text-center text-red-600">{error}</div>
+  }
 
   return (
     <div className="px-4 sm:px-6 lg:px-8">

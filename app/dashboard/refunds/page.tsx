@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -9,55 +9,29 @@ import { SmartRefundSystem } from "@/components/refunds/smart-refund-system"
 import { useToast } from "@/hooks/use-toast"
 import { CollapsibleFAQ } from "@/components/ui/collapsible-faq"
 import { DollarSign, Clock, CheckCircle, AlertCircle, X, Calendar, Plane, ArrowRight, HelpCircle } from "lucide-react"
-
-const mockRefunds = [
-  {
-    id: "REF-001",
-    ticketId: "TKT-003",
-    status: "approved",
-    route: { from: "MIA", to: "NYC", fromFull: "Miami", toFull: "New York" },
-    flightDate: "2024-11-25",
-    airline: "AeroChain",
-    flightNumber: "AC 9012",
-    originalPrice: 1.12,
-    refundAmount: 0.95,
-    refundPercentage: 85,
-    requestDate: "2024-11-20",
-    processedDate: "2024-11-21",
-    reason: "Flight cancelled by airline",
-  },
-  {
-    id: "REF-002",
-    ticketId: "TKT-004",
-    status: "pending",
-    route: { from: "LAX", to: "SEA", fromFull: "Los Angeles", toFull: "Seattle" },
-    flightDate: "2024-12-10",
-    airline: "SkyLink Airways",
-    flightNumber: "SL 2468",
-    originalPrice: 0.65,
-    refundAmount: 0.52,
-    refundPercentage: 80,
-    requestDate: "2024-11-22",
-    estimatedProcessing: "2024-11-24",
-    reason: "Personal emergency",
-  },
-]
-
-const mockActiveTicket = {
-  id: "TKT-001",
-  flightNumber: "SL 1234",
-  airline: "SkyLink Airways",
-  departureTime: "2024-12-15T14:30:00Z",
-  price: 0.89,
-  bookingTime: "2024-11-20T10:30:00Z",
-  class: "Business",
-}
+import { getUserRefunds } from "@/lib/user-dashboard-api"
 
 export default function RefundCenter() {
-  const [refunds] = useState(mockRefunds)
-  const [selectedTicket, setSelectedTicket] = useState(mockActiveTicket)
+  const [refunds, setRefunds] = useState<any[]>([])
+  const [selectedTicket, setSelectedTicket] = useState<any>(null)
   const [showSmartRefund, setShowSmartRefund] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const { toast } = useToast()
+
+  useEffect(() => {
+    setLoading(true)
+    getUserRefunds()
+      .then((data) => {
+        setRefunds(data.refunds || [])
+        setSelectedTicket(data.activeTicket || null)
+        setLoading(false)
+      })
+      .catch((err) => {
+        setError(typeof err === "string" ? err : "Failed to load refunds")
+        setLoading(false)
+      })
+  }, [])
 
   const handleClaimRefund = (refund: any) => {
     toast({
@@ -156,6 +130,9 @@ ${refund.processedDate ? `- Processed: ${new Date(refund.processedDate).toLocale
       </div>
     )
   }
+
+  if (loading) return <div className="p-8 text-center">Loading refunds...</div>
+  if (error) return <div className="p-8 text-center text-red-500">{error}</div>
 
   return (
     <div className="px-4 sm:px-6 lg:px-8">

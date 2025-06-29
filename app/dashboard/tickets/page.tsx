@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { fetchFromApi } from "@/lib/api"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -8,114 +9,69 @@ import { RedesignedNFTTicket } from "@/components/nft/redesigned-nft-ticket"
 import { AnimatedList, AnimatedListItem } from "@/components/animations/enhanced-transitions"
 import { useToast } from "@/hooks/use-toast"
 import { Search, Filter, Plane, Plus } from "lucide-react"
-
-const mockTickets = [
-  {
-    id: "TKT-001",
-    status: "active",
-    route: { from: "NYC", to: "LAX", fromFull: "New York", toFull: "Los Angeles" },
-    date: "2024-12-15",
-    time: "14:30",
-    class: "Business",
-    seat: "4A",
-    airline: "SkyLink Airways",
-    flightNumber: "SL 1234",
-    price: 0.89,
-    nftId: "NFT-12345",
-    tokenId: 12345,
-    contractAddress: "0x742d35Cc6634C0532925a3b8D4C9db96590b5c8e",
-    passenger: {
-      name: "John Doe",
-      email: "john.doe@example.com",
-      phone: "+1 (555) 123-4567",
-    },
-    metadata: {
-      rarity: "Rare" as const,
-      attributes: [
-        { trait_type: "Class", value: "Business" },
-        { trait_type: "Route", value: "Transcontinental" },
-        { trait_type: "Airline", value: "SkyLink Airways" },
-        { trait_type: "Season", value: "Winter 2024" },
-      ],
-      gate: "A12",
-      terminal: "Terminal 1",
-      boardingTime: "13:45",
-      checkInStatus: true,
-    },
-  },
-  {
-    id: "TKT-002",
-    status: "reselling",
-    route: { from: "LAX", to: "MIA", fromFull: "Los Angeles", toFull: "Miami" },
-    date: "2024-12-20",
-    time: "09:15",
-    class: "Economy",
-    seat: "15A",
-    airline: "ChainFly",
-    flightNumber: "CF 5678",
-    price: 0.42,
-    nftId: "NFT-12346",
-    tokenId: 12346,
-    contractAddress: "0x742d35Cc6634C0532925a3b8D4C9db96590b5c8e",
-    passenger: {
-      name: "Jane Smith",
-      email: "jane.smith@example.com",
-      phone: "+1 (555) 987-6543",
-    },
-    metadata: {
-      rarity: "Common" as const,
-      attributes: [
-        { trait_type: "Class", value: "Economy" },
-        { trait_type: "Route", value: "Domestic" },
-        { trait_type: "Airline", value: "ChainFly" },
-        { trait_type: "Season", value: "Winter 2024" },
-      ],
-      gate: "B7",
-      terminal: "Terminal 2",
-      boardingTime: "08:30",
-      checkInStatus: false,
-    },
-  },
-  {
-    id: "TKT-003",
-    status: "cancelled",
-    route: { from: "MIA", to: "NYC", fromFull: "Miami", toFull: "New York" },
-    date: "2024-11-25",
-    time: "18:45",
-    class: "First",
-    seat: "1A",
-    airline: "AeroChain",
-    flightNumber: "AC 9012",
-    price: 1.12,
-    nftId: "NFT-12347",
-    tokenId: 12347,
-    contractAddress: "0x742d35Cc6634C0532925a3b8D4C9db96590b5c8e",
-    passenger: {
-      name: "Alice Johnson",
-      email: "alice.johnson@example.com",
-      phone: "+1 (555) 456-7890",
-    },
-    metadata: {
-      rarity: "Legendary" as const,
-      attributes: [
-        { trait_type: "Class", value: "First" },
-        { trait_type: "Route", value: "Premium" },
-        { trait_type: "Airline", value: "AeroChain" },
-        { trait_type: "Season", value: "Fall 2024" },
-      ],
-      gate: "C3",
-      terminal: "Terminal 3",
-      boardingTime: "18:00",
-      checkInStatus: true,
-    },
-  },
-]
+import { Card, CardContent } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function MyTickets() {
-  const [tickets] = useState(mockTickets)
+  const [tickets, setTickets] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [selectedTab, setSelectedTab] = useState("all")
   const [searchTerm, setSearchTerm] = useState("")
   const { toast } = useToast()
+
+  useEffect(() => {
+    setLoading(true)
+    fetchFromApi("tickets") // Adjust endpoint if needed
+      .then((res) => {
+        // Map API ticket schema to UI ticket structure
+        const apiTickets = res.data?.ticket
+          ? Array.isArray(res.data.ticket)
+            ? res.data.ticket
+            : [res.data.ticket]
+          : []
+        // Transform API ticket to match UI structure if needed
+        const mappedTickets = apiTickets.map((t: any) => ({
+          id: t._id,
+          status: t.status || "active",
+          route: {
+            from: t.flightId?.from,
+            to: t.flightId?.to,
+            fromFull: t.flightId?.from, // Adjust if you have full names
+            toFull: t.flightId?.to,
+          },
+          date: t.flightId?.departureTime ? t.flightId.departureTime.slice(0, 10) : "",
+          time: t.flightId?.departureTime ? new Date(t.flightId.departureTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "",
+          class: t.class || "Economy",
+          seat: t.seat || "-",
+          airline: t.flightId?.airline,
+          flightNumber: t.flightId?._id,
+          price: t.price,
+          nftId: t.nftTokenId,
+          tokenId: t.nftTokenId,
+          contractAddress: t.contractAddress || "",
+          passenger: {
+            name: t.ownerId || "",
+            email: "",
+            phone: "",
+          },
+          metadata: {
+            rarity: "Common",
+            attributes: [],
+            gate: "-",
+            terminal: "-",
+            boardingTime: t.flightId?.departureTime ? new Date(t.flightId.departureTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "",
+            checkInStatus: false,
+          },
+        }))
+        setTickets(mappedTickets)
+        setLoading(false)
+      })
+      .catch((err) => {
+        setError(typeof err === "string" ? err : "Failed to fetch tickets")
+        setLoading(false)
+      })
+  }, [])
 
   const handleTicketAction = (action: string, ticket: any) => {
     switch (action) {
@@ -157,6 +113,41 @@ export default function MyTickets() {
 
     return matchesTab && matchesSearch
   })
+
+  if (loading) {
+    return (
+      <div className="p-8 text-center">
+        <div className="mb-8">
+          <Skeleton className="h-10 w-48 mb-2 mx-auto" />
+          <Skeleton className="h-4 w-64 mx-auto" />
+        </div>
+        <div className="flex flex-col gap-6 items-center">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i} className="w-full max-w-xl">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <Skeleton className="h-8 w-24" />
+                  <Skeleton className="h-6 w-32" />
+                  <Skeleton className="h-6 w-20" />
+                  <Skeleton className="h-6 w-16" />
+                  <Skeleton className="h-6 w-16" />
+                  <Skeleton className="h-10 w-32 ml-auto" />
+                </div>
+                <div className="flex gap-2 mt-4">
+                  {[...Array(4)].map((_, j) => (
+                    <Skeleton key={j} className="h-4 w-16" />
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    )
+  }
+  if (error) {
+    return <div className="p-8 text-center text-red-600">{error}</div>
+  }
 
   return (
     <div className="px-4 sm:px-6 lg:px-8">

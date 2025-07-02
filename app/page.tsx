@@ -423,7 +423,7 @@ export default function FlyChainLanding() {
       <section id="features" className="py-20 px-4 bg-gradient-to-br from-gray-50 to-slate-100">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4">Why Choose FlyChain?</h2>
+            <h2 className="text-4xl font-bold mb-4">Why Choose Avax-reFlights?</h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               Experience the future of travel with blockchain-powered booking, true ticket ownership, and automated
               fairness.
@@ -583,7 +583,7 @@ export default function FlyChainLanding() {
         <div className="container mx-auto max-w-4xl text-center text-white">
           <h2 className="text-4xl font-bold mb-6">Ready to Fly the Decentralized Way?</h2>
           <p className="text-xl mb-8 opacity-90">
-            Join the future of travel. Book your first flight on FlyChain today.
+            Join the future of travel. Book your first flight on Avax-reFlights today.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {!isLoggedIn && (

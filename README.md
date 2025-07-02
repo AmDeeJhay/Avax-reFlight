@@ -17,7 +17,7 @@ An onchain flight booking marketplace where users can book flights as NFT ticket
 
 ### Modular Structure
 
-```
+\`\`\`
 src/
 ├── controllers/     # HTTP request handlers
 ├── middleware/      # Authentication, validation, error handling
@@ -26,7 +26,7 @@ src/
 ├── services/       # Business logic
 ├── types/          # TypeScript type definitions
 └── utils/          # Database connection, validation schemas
-```
+\`\`\`
 
 ### Tech Stack
 
@@ -50,40 +50,40 @@ src/
 
 1. **Clone and navigate**
 
-   ```bash
+   \`\`\`bash
    cd reflights
-   ```
+   \`\`\`
 
 2. **Install dependencies**
 
-   ```bash
+   \`\`\`bash
    npm install
-   ```
+   \`\`\`
 
 3. **Environment setup**
 
-   ```bash
+   \`\`\`bash
    cp .env.example .env
    # Edit .env with your configuration
-   ```
+   \`\`\`
 
 4. **Start MongoDB**
 
-   ```bash
+   \`\`\`bash
    # Make sure MongoDB is running locally on port 27017
    # Or update MONGODB_URI in .env with your connection string
-   ```
+   \`\`\`
 
 5. **Build the project**
 
-   ```bash
+   \`\`\`bash
    npm run build
-   ```
+   \`\`\`
 
 6. **Start development server**
-   ```bash
+   \`\`\`bash
    npm run dev
-   ```
+   \`\`\`
 
 The server will start on `http://localhost:3000`
 
@@ -91,7 +91,7 @@ The server will start on `http://localhost:3000`
 
 Update the `.env` file with your settings:
 
-```env
+\`\`\`env
 NODE_ENV=development
 PORT=3000
 MONGODB_URI=mongodb://localhost:27017/avax-reflights
@@ -101,7 +101,7 @@ DUFFEL_API_TOKEN=duffel_test_your-actual-api-token-here
 DUFFEL_API_URL=https://api.duffel.com
 NFT_BASE_URI=https://api.reflights.com/metadata/
 API_VERSION=v1
-```
+\`\`\`
 
 ### Duffel API Setup
 
@@ -168,7 +168,7 @@ Once the server is running, visit:
 
 ### Search Flights with Duffel API
 
-```bash
+\`\`\`bash
 # Search for flights from NYC to LAX
 GET /api/flights?from=JFK&to=LAX&date=2024-12-25&useDuffel=true&adults=1&cabinClass=economy
 
@@ -192,11 +192,11 @@ POST /api/flights/duffel/orders
     "phone_number": "+1234567890"
   }]
 }
-```
+\`\`\`
 
 ### Standard Flight Search (Database)
 
-```bash
+\`\`\`bash
 # Search database flights
 GET /api/flights?from=NYC&to=LAX&date=2024-12-25
 
@@ -205,15 +205,15 @@ POST /api/tickets/book
 {
   "flightId": "flight_id_here"
 }
-```
+\`\`\`
 
 ## 🔒 Authentication
 
 Protected endpoints require a Bearer token in the Authorization header:
 
-```bash
+\`\`\`bash
 Authorization: Bearer <your-jwt-token>
-```
+\`\`\`
 
 Get the token by registering or logging in via the auth endpoints.
 

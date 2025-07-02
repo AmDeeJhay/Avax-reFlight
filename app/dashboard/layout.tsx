@@ -133,8 +133,14 @@ export default function DashboardLayout({
             <Menu className="w-5 h-5 sm:w-5 sm:h-5" />
           </Button>
 
-          <div className="flex flex-1 gap-x-2 sm:gap-x-4 self-stretch lg:gap-x-6 min-w-0">
-            
+          <div className="flex flex-1 gap-x-2 sm:gap-x-8 self-stretch lg:gap-x-6 min-w-0">
+            <div className="flex flex-1 items-center min-w-0">
+              <Badge className="bg-blue-100 text-blue-800 text-xs mr-2 sm:mr-4">User Panel</Badge>
+              <Button onClick={() => router.push("/")} variant="ghost" size="sm" className="lg:hidden">
+                <ArrowLeft className="w-4 h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                <span className="truncate text-xs sm:text-sm">Home</span>
+              </Button>
+            </div>
             <div className="flex items-center gap-x-2 sm:gap-x-4 lg:gap-x-6 flex-shrink-0">
               {/* Notifications */}
               <NotificationPanel>
@@ -143,8 +149,8 @@ export default function DashboardLayout({
                 </Button>
               </NotificationPanel>
 
-              {/* Wallet info */}
-              <UnifiedConnectButton variant="ghost" size="sm" showRoleSwitch={true} />
+              {/* Profile icon and logout only, no wallet connect */}
+              <UnifiedConnectButton variant="ghost" size="sm" dashboardMode={true} />
             </div>
           </div>
         </div>

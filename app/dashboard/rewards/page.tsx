@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { getUserRewards } from "@/lib/user-dashboard-api"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -22,24 +21,45 @@ import {
 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 
+const mockRewardsData = {
+  userStats: {
+    points: 1200,
+    currentTier: "Silver",
+    redeemed: ["Free Lounge Pass"],
+    totalFlights: 12,
+    ticketsResold: 3,
+    earlyRefunds: 2,
+    memberSince: new Date().toISOString(),
+  },
+  tiers: [
+    { name: "Bronze", minPoints: 0, color: "bg-gray-400", benefits: ["Basic Support"] },
+    { name: "Silver", minPoints: 1000, color: "bg-blue-500", benefits: ["Priority Support", "Faster Refunds"] },
+    { name: "Gold", minPoints: 2500, color: "bg-yellow-500", benefits: ["Lounge Access", "Free Upgrades"] },
+    { name: "Platinum", minPoints: 5000, color: "bg-purple-600", benefits: ["VIP Service", "Personal Concierge"] },
+  ],
+  rewards: [
+    { id: 1, name: "Free Lounge Pass", cost: 500, available: true, icon: Award },
+    { id: 2, name: "Priority Boarding", cost: 800, available: true, icon: TrendingUp },
+    { id: 3, name: "Seat Upgrade", cost: 1500, available: false, icon: Crown },
+  ],
+  availableRewards: [
+    { id: 1, name: "Free Lounge Pass", cost: 500, available: true, icon: Award },
+    { id: 2, name: "Priority Boarding", cost: 800, available: true, icon: TrendingUp },
+    { id: 3, name: "Seat Upgrade", cost: 1500, available: false, icon: Crown },
+  ],
+  recentActivities: [
+    { type: "booking", description: "Booked flight NYC → LON", date: new Date().toISOString(), points: 100 },
+    { type: "resale", description: "Resold ticket for LAX → SFO", date: new Date().toISOString(), points: 200 },
+    { type: "early_refund", description: "Early refund for flight PAR → BER", date: new Date().toISOString(), points: 50 },
+    { type: "referral", description: "Referred a friend", date: new Date().toISOString(), points: 500 },
+  ],
+}
+
 export default function Rewards() {
   const { toast } = useToast()
-  const [rewardsData, setRewardsData] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
+  const [rewardsData, setRewardsData] = useState<any>(mockRewardsData)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    setLoading(true)
-    getUserRewards()
-      .then((data) => {
-        setRewardsData(data)
-        setLoading(false)
-      })
-      .catch((err) => {
-        setError(typeof err === "string" ? err : "Failed to load rewards")
-        setLoading(false)
-      })
-  }, [])
 
   const currentTierIndex = rewardsData
     ? rewardsData.tiers.findIndex((tier: any) => tier.name === rewardsData.userStats.currentTier)

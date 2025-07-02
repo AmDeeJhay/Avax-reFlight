@@ -1,12 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 import { Plane, Star, Zap, Coffee, Wifi, Monitor, DollarSign } from "lucide-react"
+// import { getSeatMap } from "@/lib/api" // Uncomment when endpoint is ready
 
 interface SeatMap {
   rows: number
@@ -58,11 +59,23 @@ interface SeatSelectionProps {
 export function SeatSelection({ flightId, onSeatSelect }: SeatSelectionProps) {
   const [selectedSeat, setSelectedSeat] = useState<string | null>(null)
   const [hoveredSeat, setHoveredSeat] = useState<string | null>(null)
+  const [seatMap, setSeatMap] = useState<SeatMap | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    // TODO: Replace with real API call when endpoint is ready
+    // setLoading(true)
+    // getSeatMap(flightId)
+    //   .then((data) => setSeatMap(data))
+    //   .catch(() => setSeatMap(null))
+    //   .finally(() => setLoading(false))
+    setSeatMap(mockSeatMap)
+  }, [flightId])
 
   const getSeatInfo = (row: number, seat: string) => {
     const seatId = `${row}${seat}`
     return (
-      mockSeatMap.seatTypes[seatId] || {
+      (seatMap?.seatTypes[seatId]) || {
         type: "economy" as const,
         price: 0,
         features: ["standard"],
@@ -163,19 +176,17 @@ export function SeatSelection({ flightId, onSeatSelect }: SeatSelectionProps) {
 
               {/* Seat Grid */}
               <div className="space-y-1 max-h-96 overflow-y-auto">
-                {Array.from({ length: mockSeatMap.rows }, (_, rowIndex) => {
+                {Array.from({ length: seatMap?.rows || mockSeatMap.rows }, (_, rowIndex) => {
                   const row = rowIndex + 1
                   return (
                     <div key={row} className="flex items-center justify-center space-x-1">
                       <div className="w-6 text-xs text-gray-500 text-center">{row}</div>
-                      {mockSeatMap.seatsPerRow.map((seat, seatIndex) => {
+                      {(seatMap?.seatsPerRow || mockSeatMap.seatsPerRow).map((seat, seatIndex) => {
                         if (seat === "") {
                           return <div key={seatIndex} className="w-4" />
                         }
-
                         const seatId = `${row}${seat}`
                         const seatInfo = getSeatInfo(row, seat)
-
                         return (
                           <motion.button
                             key={seatId}

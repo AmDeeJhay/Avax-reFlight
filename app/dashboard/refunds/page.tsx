@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -9,29 +9,41 @@ import { SmartRefundSystem } from "@/components/refunds/smart-refund-system"
 import { useToast } from "@/hooks/use-toast"
 import { CollapsibleFAQ } from "@/components/ui/collapsible-faq"
 import { DollarSign, Clock, CheckCircle, AlertCircle, X, Calendar, Plane, ArrowRight, HelpCircle } from "lucide-react"
-import { getUserRefunds } from "@/lib/user-dashboard-api"
+
+const mockRefunds = [
+  {
+    id: "r1",
+    route: { fromFull: "New York", toFull: "London" },
+    airline: "Delta",
+    flightNumber: "DL123",
+    originalPrice: 2.5,
+    refundAmount: 1.2,
+    status: "approved",
+    reason: "Flight cancelled",
+    requestDate: new Date().toISOString(),
+    processedDate: new Date().toISOString(),
+  },
+  {
+    id: "r2",
+    route: { fromFull: "Paris", toFull: "Berlin" },
+    airline: "Air France",
+    flightNumber: "AF456",
+    originalPrice: 1.8,
+    refundAmount: 0.9,
+    status: "pending",
+    reason: "Delay over 3 hours",
+    requestDate: new Date().toISOString(),
+    processedDate: null,
+  },
+]
 
 export default function RefundCenter() {
-  const [refunds, setRefunds] = useState<any[]>([])
+  const [refunds, setRefunds] = useState<any[]>(mockRefunds)
   const [selectedTicket, setSelectedTicket] = useState<any>(null)
   const [showSmartRefund, setShowSmartRefund] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { toast } = useToast()
-
-  useEffect(() => {
-    setLoading(true)
-    getUserRefunds()
-      .then((data) => {
-        setRefunds(data.refunds || [])
-        setSelectedTicket(data.activeTicket || null)
-        setLoading(false)
-      })
-      .catch((err) => {
-        setError(typeof err === "string" ? err : "Failed to load refunds")
-        setLoading(false)
-      })
-  }, [])
 
   const handleClaimRefund = (refund: any) => {
     toast({

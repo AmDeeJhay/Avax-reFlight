@@ -16,12 +16,14 @@ import { useWalletStore } from "@/lib/wallet-manager"
 import { useRouter } from "next/navigation"
 import { WalletConnectionModal } from "./wallet-connection-modal"
 import { Wallet, ChevronDown, Copy, ExternalLink, LogOut, User, Shield, Zap } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 interface UnifiedConnectButtonProps {
   className?: string
   variant?: "default" | "outline" | "ghost"
   size?: "default" | "sm" | "lg"
   showRoleSwitch?: boolean
+  dashboardMode?: boolean // restricts dropdown to just Logout
 }
 
 export function UnifiedConnectButton({
@@ -29,6 +31,7 @@ export function UnifiedConnectButton({
   variant = "default",
   size = "default",
   showRoleSwitch = false,
+  dashboardMode = false, // NEW
 }: UnifiedConnectButtonProps) {
   const { toast } = useToast()
   const router = useRouter()
@@ -36,6 +39,21 @@ export function UnifiedConnectButton({
   const [showModal, setShowModal] = useState(false)
 
   const { isConnected, isDemoMode, address, balance, role, disconnect, switchRole } = useWalletStore()
+
+  // Get user info for avatar
+  let userInitials = "AR"
+  let userAvatar = null
+  if (typeof window !== "undefined") {
+    try {
+      const user = JSON.parse(localStorage.getItem("user") || "{}")
+      if (user?.name) {
+        userInitials = user.name.split(" ").map((n: string) => n[0]).join("").toUpperCase()
+      }
+      if (user?.avatar) {
+        userAvatar = user.avatar
+      }
+    } catch {}
+  }
 
   // Handle hydration
   useEffect(() => {
@@ -95,89 +113,87 @@ export function UnifiedConnectButton({
     )
   }
 
-  if (isConnected && address) {
+  // Only show profile icon and logout in dashboardMode, regardless of wallet connection
+  if (dashboardMode) {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant={variant} size={size} className={`${className} relative overflow-hidden group`}>
+          <Button variant={variant} size={size} className={`${className} relative overflow-hidden group px-2 py-1.5`}>
             <motion.div
-              className="flex items-center space-x-1 sm:space-x-2"
+              className="flex items-center space-x-2"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="flex items-center space-x-1 sm:space-x-2">
-                {isDemoMode ? (
-                  <Zap className="w-3 h-3 text-yellow-500" />
+              <Avatar className="w-8 h-8">
+                {userAvatar ? (
+                  <AvatarImage src={userAvatar} alt="User Avatar" />
                 ) : (
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  <AvatarFallback className="bg-gradient-to-r from-red-500 to-blue-600 text-white text-lg">
+                    {userInitials}
+                  </AvatarFallback>
                 )}
-                <Badge
-                  variant={isDemoMode ? "secondary" : "default"}
-                  className={`${isDemoMode ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800"} text-xs`}
-                >
-                  {isDemoMode ? "DEMO" : "LIVE"}
-                </Badge>
-              </div>
-              <div className="hidden sm:block text-right">
-                <p className="text-xs sm:text-sm font-medium mobile-truncate">{balance} AVAX</p>
-                <p className="text-xs opacity-75 mobile-truncate">{formatAddress(address)}</p>
-              </div>
-              <div className="sm:hidden">
-                <Wallet className="w-4 h-4" />
-              </div>
-              <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4" />
+              </Avatar>
+              <ChevronDown className="w-4 h-4" />
             </motion.div>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56 sm:w-64 mobile-modal">
-          <div className="px-3 py-2">
-            <div className="flex items-center justify-between mb-2">
-              <p className="font-medium mobile-text">{isDemoMode ? "Demo Wallet" : "Connected Wallet"}</p>
-              <Badge
-                variant={isDemoMode ? "secondary" : "default"}
-                className={`${isDemoMode ? "bg-yellow-100 text-yellow-800" : "bg-green-100 text-green-800"} text-xs`}
-              >
-                {isDemoMode ? "DEMO" : "LIVE"}
-              </Badge>
-            </div>
-            <p className="text-xs text-muted-foreground mobile-truncate">{formatAddress(address)}</p>
-            <p className="text-xs text-muted-foreground">Balance: {balance} AVAX</p>
-            {role && <p className="text-xs text-muted-foreground capitalize">Role: {role}</p>}
-          </div>
-
-          <DropdownMenuSeparator />
-
-          <DropdownMenuItem onClick={copyAddress}>
-            <Copy className="w-4 h-4 mr-2" />
-            <span className="mobile-text">Copy Address</span>
+          <DropdownMenuItem onClick={handleDisconnect} className="text-red-600">
+            <LogOut className="w-4 h-4 mr-2" />
+            <span className="mobile-text">Logout</span>
           </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    )
+  }
 
-          <DropdownMenuItem onClick={() => window.open(`https://testnet.snowtrace.io/address/${address}`, "_blank")}>
-            <ExternalLink className="w-4 h-4 mr-2" />
-            <span className="mobile-text">View on Explorer</span>
-          </DropdownMenuItem>
-
-          {isDemoMode && showRoleSwitch && (
+  if (isConnected && address) {
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant={variant} size={size} className={`${className} relative overflow-hidden group px-2 py-1.5`}>
+            <motion.div
+              className="flex items-center space-x-2"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Avatar className="w-8 h-8">
+                {userAvatar ? (
+                  <AvatarImage src={userAvatar} alt="User Avatar" />
+                ) : (
+                  <AvatarFallback className="bg-gradient-to-r from-red-500 to-blue-600 text-white text-lg">
+                    {userInitials}
+                  </AvatarFallback>
+                )}
+              </Avatar>
+              <ChevronDown className="w-4 h-4" />
+            </motion.div>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-56 sm:w-64 mobile-modal">
+          {/* Only show Logout if dashboardMode is true */}
+          {dashboardMode ? (
+            <DropdownMenuItem onClick={handleDisconnect} className="text-red-600">
+              <LogOut className="w-4 h-4 mr-2" />
+              <span className="mobile-text">Logout</span>
+            </DropdownMenuItem>
+          ) : (
             <>
+              <DropdownMenuItem onClick={() => router.push("/profile")}>Profile</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => handleRoleSwitch("user")} disabled={role === "user"}>
-                <User className="w-4 h-4 mr-2" />
-                <span className="mobile-text">Switch to User</span>
+              <DropdownMenuItem onClick={() => setShowModal(true)}>
+                <Wallet className="w-4 h-4 mr-2" />
+                <span className="mobile-text">Connect Wallet</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleRoleSwitch("admin")} disabled={role === "admin"}>
-                <Shield className="w-4 h-4 mr-2" />
-                <span className="mobile-text">Switch to Admin</span>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleDisconnect} className="text-red-600">
+                <LogOut className="w-4 h-4 mr-2" />
+                <span className="mobile-text">Logout</span>
               </DropdownMenuItem>
             </>
           )}
-
-          <DropdownMenuSeparator />
-
-          <DropdownMenuItem onClick={handleDisconnect} className="text-red-600">
-            <LogOut className="w-4 h-4 mr-2" />
-            <span className="mobile-text">Disconnect</span>
-          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     )

@@ -163,8 +163,8 @@ export default function AdminLayout({
                 </Button>
               </NotificationPanel>
 
-              {/* Admin info */}
-              <UnifiedConnectButton variant="ghost" size="sm" showRoleSwitch={true} />
+              {/* Profile icon and logout only, no wallet connect */}
+              <UnifiedConnectButton variant="ghost" size="sm" dashboardMode={true} />
             </div>
           </div>
         </div>

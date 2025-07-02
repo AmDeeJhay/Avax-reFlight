@@ -1,29 +1,59 @@
 import axios from 'axios';
 import { MarketplaceListing } from "./types";
 
-const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
+
 const API_BASE_URL = 'https://reflights.onrender.com';
+
+function getAuthToken() {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('token');
+  }
+  return null;
+}
+
+export async function loginUser(email: string, password: string) {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/api/auth/login`, { email, password });
+    // Save token to localStorage
+    if (response.data && response.data.token) {
+      localStorage.setItem('token', response.data.token);
+    }
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error.message || 'Login failed';
+  }
+}
+
+export async function signupUser(userData: { email: string; password: string; name?: string }) {
+  try {
+    const response = await axios.post(`${API_BASE_URL}/api/auth/register`, userData);
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error.message || 'Signup failed';
+  }
+}
 
 export async function fetchFromApi(endpoint: string, params = {}) {
   try {
+    const token = getAuthToken();
     const response = await axios.get(`${API_BASE_URL}/${endpoint}`, {
       params,
       headers: {
-        'Authorization': `Bearer ${API_KEY}`,
+        'Authorization': token ? `Bearer ${token}` : '',
       },
     });
     return response.data;
   } catch (error: any) {
-    // Optionally, you can log or transform the error here
     throw error.response?.data || error.message || 'API request failed';
   }
 }
 
 export async function createFlight(flightData: any) {
   try {
-    const response = await axios.post(`${API_BASE_URL}/admin/flights`, flightData, {
+    const token = getAuthToken();
+    const response = await axios.post(`${API_BASE_URL}/api/flights`, flightData, {
       headers: {
-        'Authorization': `Bearer ${API_KEY}`,
+        'Authorization': token ? `Bearer ${token}` : '',
       },
     });
     return response.data;
@@ -34,9 +64,10 @@ export async function createFlight(flightData: any) {
 
 export async function getFlightById(flightId: string) {
   try {
-    const response = await axios.get(`${API_BASE_URL}/flights/${flightId}`, {
+    const token = getAuthToken();
+    const response = await axios.get(`${API_BASE_URL}/api/flights/${flightId}`, {
       headers: {
-        'Authorization': `Bearer ${API_KEY}`,
+        'Authorization': token ? `Bearer ${token}` : '',
       },
     });
     return response.data;
@@ -45,11 +76,15 @@ export async function getFlightById(flightId: string) {
   }
 }
 
-// Fetch a ticket by ID
-export async function getTicketById(ticketId: string) {
+// Search flights (GET /api/flights)
+export async function searchFlights(params = {}) {
   try {
-    const response = await axios.get(`${API_BASE_URL}/tickets/${ticketId}`, {
-      headers: { 'Authorization': `Bearer ${API_KEY}` },
+    const token = getAuthToken();
+    const response = await axios.get(`${API_BASE_URL}/api/flights`, {
+      params,
+      headers: {
+        'Authorization': token ? `Bearer ${token}` : '',
+      },
     });
     return response.data;
   } catch (error: any) {
@@ -57,11 +92,12 @@ export async function getTicketById(ticketId: string) {
   }
 }
 
-// Fetch all marketplace listings
-export async function getMarketplaceListings(): Promise<MarketplaceListing[]> {
+// Get Duffel offer details (GET /api/flights/duffel/offers/{offerId})
+export async function getDuffelOfferDetails(offerId: string) {
   try {
-    const response = await axios.get(`${API_BASE_URL}/marketplace/listings`, {
-      headers: { 'Authorization': `Bearer ${API_KEY}` },
+    const token = getAuthToken();
+    const response = await axios.get(`${API_BASE_URL}/api/flights/duffel/offers/${offerId}`, {
+      headers: { 'Authorization': token ? `Bearer ${token}` : '' },
     });
     return response.data;
   } catch (error: any) {
@@ -69,11 +105,78 @@ export async function getMarketplaceListings(): Promise<MarketplaceListing[]> {
   }
 }
 
-// Buy a listed ticket (no buyerData required unless your backend expects it)
+// Create a flight order with Duffel (POST /api/flights/duffel/orders)
+export async function createDuffelOrder(orderData: any) {
+  try {
+    const token = getAuthToken();
+    const response = await axios.post(`${API_BASE_URL}/api/flights/duffel/orders`, orderData, {
+      headers: { 'Authorization': token ? `Bearer ${token}` : '' },
+    });
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error.message || 'API request failed';
+  }
+}
+
+// Search airports (GET /api/flights/airports)
+export async function searchAirports(params = {}) {
+  try {
+    const token = getAuthToken();
+    const response = await axios.get(`${API_BASE_URL}/api/flights/airports`, {
+      params,
+      headers: { 'Authorization': token ? `Bearer ${token}` : '' },
+    });
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error.message || 'API request failed';
+  }
+}
+
+// Book a flight ticket (POST /api/tickets/book)
+export async function bookTicket(ticketData: any) {
+  try {
+    const token = getAuthToken();
+    const response = await axios.post(`${API_BASE_URL}/api/tickets/book`, ticketData, {
+      headers: { 'Authorization': token ? `Bearer ${token}` : '' },
+    });
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error.message || 'API request failed';
+  }
+}
+
+// Get user's tickets (GET /api/tickets/me)
+export async function getMyTickets() {
+  try {
+    const token = getAuthToken();
+    const response = await axios.get(`${API_BASE_URL}/api/tickets/me`, {
+      headers: { 'Authorization': token ? `Bearer ${token}` : '' },
+    });
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error.message || 'API request failed';
+  }
+}
+
+// List ticket for resale (POST /api/tickets/{ticketId}/list)
+export async function listTicketForResale(ticketId: string, data: any) {
+  try {
+    const token = getAuthToken();
+    const response = await axios.post(`${API_BASE_URL}/api/tickets/${ticketId}/list`, data, {
+      headers: { 'Authorization': token ? `Bearer ${token}` : '' },
+    });
+    return response.data;
+  } catch (error: any) {
+    throw error.response?.data || error.message || 'API request failed';
+  }
+}
+
+// Buy a listed ticket (POST /api/tickets/{ticketId}/buy)
 export async function buyTicket(ticketId: string) {
   try {
-    const response = await axios.post(`${API_BASE_URL}/tickets/${ticketId}/buy`, {}, {
-      headers: { 'Authorization': `Bearer ${API_KEY}` },
+    const token = getAuthToken();
+    const response = await axios.post(`${API_BASE_URL}/api/tickets/${ticketId}/buy`, {}, {
+      headers: { 'Authorization': token ? `Bearer ${token}` : '' },
     });
     return response.data;
   } catch (error: any) {
@@ -81,15 +184,12 @@ export async function buyTicket(ticketId: string) {
   }
 }
 
-// Submit a marketplace offer for a listing
-export async function makeMarketplaceOffer({ listingId, offerAmount, message }: { listingId: string, offerAmount: number, message?: string }) {
+// Get ticket by ID (GET /api/tickets/{ticketId})
+export async function getTicketById(ticketId: string) {
   try {
-    const response = await axios.post(`${API_BASE_URL}/marketplace/offers`, {
-      listingId,
-      offerAmount,
-      message,
-    }, {
-      headers: { 'Authorization': `Bearer ${API_KEY}` },
+    const token = getAuthToken();
+    const response = await axios.get(`${API_BASE_URL}/api/tickets/${ticketId}`, {
+      headers: { 'Authorization': token ? `Bearer ${token}` : '' },
     });
     return response.data;
   } catch (error: any) {

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { fetchFromApi } from "@/lib/api"
+import { getMyTickets } from "@/lib/api"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -22,7 +22,8 @@ export default function MyTickets() {
 
   useEffect(() => {
     setLoading(true)
-    fetchFromApi("tickets") // Adjust endpoint if needed
+    setError(null)
+    getMyTickets()
       .then((res) => {
         // Map API ticket schema to UI ticket structure
         const apiTickets = res.data?.ticket
@@ -44,9 +45,9 @@ export default function MyTickets() {
           time: t.flightId?.departureTime ? new Date(t.flightId.departureTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "",
           class: t.class || "Economy",
           seat: t.seat || "-",
-          airline: t.flightId?.airline,
-          flightNumber: t.flightId?._id,
-          price: t.price,
+          airline: t.flightId?.airline || "",
+          flightNumber: t.flightId?._id || "",
+          price: t.price || 0,
           nftId: t.nftTokenId,
           tokenId: t.nftTokenId,
           contractAddress: t.contractAddress || "",
@@ -68,7 +69,11 @@ export default function MyTickets() {
         setLoading(false)
       })
       .catch((err) => {
-        setError(typeof err === "string" ? err : "Failed to fetch tickets")
+        let message = "Failed to fetch tickets"
+        if (typeof err === "string") message = err
+        else if (err && err.message) message = err.message
+        else if (err && err.error) message = err.error
+        setError(message)
         setLoading(false)
       })
   }, [])

@@ -17,13 +17,148 @@ import {
   CheckCircle,
   Users,
   CalendarDays,
+  ChevronDown,
 } from "lucide-react"
 import Link from "next/link"
-import { UnifiedConnectButton } from "@/components/wallet/unified-connect-button"
+import { useRouter } from "next/navigation"
 import { AnimatedCard, ScaleIn } from "@/components/animations/enhanced-transitions"
 import { AirportSelector } from "@/components/booking/airport-selector"
+import { useEffect, useState, useCallback } from "react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 export default function FlyChainLanding() {
+  const router = useRouter();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [userInitials, setUserInitials] = useState("AR");
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Improved login check function
+  const checkLoginState = useCallback(() => {
+    try {
+      const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+      const isUserLoggedIn = !!token;
+      
+      console.log("Checking login state:", { token: !!token, isUserLoggedIn }); // Debug log
+      
+      setIsLoggedIn(isUserLoggedIn);
+      
+      if (isUserLoggedIn && token) {
+        try {
+          const user = JSON.parse(localStorage.getItem("user") || "{}");
+          if (user?.name) {
+            setUserInitials(user.name.split(" ").map((n: string) => n[0]).join("").toUpperCase());
+          } else {
+            setUserInitials("AR");
+          }
+          setUserAvatar(user?.avatar || null);
+        } catch (error) {
+          console.error("Error parsing user data:", error);
+          setUserInitials("AR");
+          setUserAvatar(null);
+        }
+      } else {
+        // Reset user data when logged out
+        setUserInitials("AR");
+        setUserAvatar(null);
+      }
+    } catch (error) {
+      console.error("Error checking login state:", error);
+      setIsLoggedIn(false);
+      setUserInitials("AR");
+      setUserAvatar(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Initial check with a small delay to ensure localStorage is ready
+    const timer = setTimeout(() => {
+      checkLoginState();
+    }, 100);
+
+    // Listen for storage changes (for cross-tab logout)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === "token" || e.key === "user") {
+        console.log("Storage change detected:", e.key, e.newValue); // Debug log
+        checkLoginState();
+      }
+    };
+
+    // Listen for custom logout event
+    const handleLogoutEvent = () => {
+      console.log("Logout event detected"); // Debug log
+      checkLoginState();
+    };
+
+    // Listen for page visibility changes (when user comes back to tab)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        checkLoginState();
+      }
+    };
+
+    // Listen for focus events (when user comes back to window)
+    const handleFocus = () => {
+      checkLoginState();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("userLogout", handleLogoutEvent);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("userLogout", handleLogoutEvent);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [checkLoginState]);
+
+  // Improved logout handler
+  const handleLogout = useCallback(() => {
+    try {
+      // Clear localStorage
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      
+      // Update state immediately
+      setIsLoggedIn(false);
+      setUserInitials("AR");
+      setUserAvatar(null);
+      
+      // Dispatch custom event for other components
+      window.dispatchEvent(new CustomEvent("userLogout"));
+      
+      // Navigate to home
+      router.push("/");
+      
+      // Force a storage event for cross-tab synchronization
+      setTimeout(() => {
+        window.dispatchEvent(new StorageEvent("storage", {
+          key: "token",
+          oldValue: "logged_in",
+          newValue: null,
+          url: window.location.href
+        }));
+      }, 10);
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
+  }, [router]);
+
+  // Show loading state briefly to prevent flash
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-red-500"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Header */}
@@ -47,7 +182,50 @@ export default function FlyChainLanding() {
             <Link href="#partners" className="text-gray-600 hover:text-gray-900 transition-colors">
               Partners
             </Link>
-            <UnifiedConnectButton variant="outline" className="border-red-500 text-red-500 hover:bg-red-50" />
+            {isLoggedIn ? (
+              <div className="relative group">
+                <button className="flex items-center space-x-2 focus:outline-none" tabIndex={0}>
+                  <Avatar className="w-8 h-8">
+                    {userAvatar ? (
+                      <AvatarImage src={userAvatar} alt="User Avatar" />
+                    ) : (
+                      <AvatarFallback className="bg-gradient-to-r from-red-500 to-blue-600 text-white text-lg">{userInitials}</AvatarFallback>
+                    )}
+                  </Avatar>
+                  <ChevronDown className="w-4 h-4 ml-1" />
+                </button>
+                <div className="absolute right-0 mt-2 w-40 bg-white border rounded shadow-lg z-50 opacity-0 invisible group-hover:opacity-100 group-hover:visible group-focus-within:opacity-100 group-focus-within:visible transition-all duration-200">
+                  <button 
+                    onClick={() => router.push("/profile")}
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-gray-700"
+                  >
+                    Profile
+                  </button>
+                  <button 
+                    onClick={handleLogout}
+                    className="block w-full text-left px-4 py-2 hover:bg-gray-100 text-red-600"
+                  >
+                    Logout
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                <Button
+                  onClick={() => router.push("/login")}
+                  className="bg-gradient-to-r from-red-500 to-blue-600 text-white font-bold"
+                >
+                  Sign In
+                </Button>
+                <Button
+                  onClick={() => router.push("/signup")}
+                  variant="outline"
+                  className="font-bold"
+                >
+                  Sign Up
+                </Button>
+              </>
+            )}
           </nav>
         </div>
       </header>
@@ -83,17 +261,42 @@ export default function FlyChainLanding() {
 
           <ScaleIn delay={0.8}>
             <div className="mb-8">
-              <UnifiedConnectButton
-                size="lg"
-                className="px-8 py-4 text-lg bg-gradient-to-r from-red-500 to-blue-600 hover:from-red-600 hover:to-blue-700 text-white hover:shadow-lg hover:shadow-red-500/25 transition-all duration-300"
-                showRoleSwitch={true}
-              />
+              {isLoggedIn ? (
+                <Button
+                  size="lg"
+                  className="px-8 py-4 text-lg bg-gradient-to-r from-blue-600 to-red-500 hover:from-blue-700 hover:to-red-600 text-white font-bold"
+                  onClick={() => router.push("/dashboard")}
+                >
+                  Go to Dashboard
+                </Button>
+              ) : (
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Button
+                    size="lg"
+                    className="px-8 py-4 text-lg bg-gradient-to-r from-red-500 to-blue-600 hover:from-red-600 hover:to-blue-700 text-white hover:shadow-lg hover:shadow-red-500/25 transition-all duration-300"
+                    onClick={() => router.push("/signup")}
+                  >
+                    Get Started
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="px-8 py-4 text-lg font-bold"
+                    onClick={() => router.push("/login")}
+                  >
+                    Sign In
+                  </Button>
+                </div>
+              )}
             </div>
           </ScaleIn>
 
           <ScaleIn delay={1.0}>
             <p className="text-sm text-gray-500">
-              Connect with demo mode to explore instantly, or use your real wallet
+              {isLoggedIn 
+                ? "Welcome back! Access your dashboard to manage your flights"
+                : "Connect with demo mode to explore instantly, or use your real wallet"
+              }
             </p>
           </ScaleIn>
         </div>
@@ -189,13 +392,26 @@ export default function FlyChainLanding() {
                   </Select>
                 </div>
 
-                <Button className="w-full bg-gradient-to-r from-red-500 to-blue-600 hover:from-red-600 hover:to-blue-700 text-white py-3">
+                <Button 
+                  className="w-full bg-gradient-to-r from-red-500 to-blue-600 hover:from-red-600 hover:to-blue-700 text-white py-3"
+                  onClick={() => {
+                    if (isLoggedIn) {
+                      // If logged in, proceed with search (you can add search logic here)
+                      router.push("/search"); // or wherever you want to navigate for search
+                    } else {
+                      router.push("/login");
+                    }
+                  }}
+                >
                   <Search className="w-5 h-5 mr-2" />
                   Search Flights
                 </Button>
 
                 <p className="text-sm text-gray-500 text-center">
-                  Connect your wallet to view live pricing and book flights
+                  {isLoggedIn 
+                    ? "Search and book flights directly on-chain" 
+                    : "Connect your wallet to view live pricing and book flights"
+                  }
                 </p>
               </CardContent>
             </Card>
@@ -278,7 +494,7 @@ export default function FlyChainLanding() {
       <section id="how-it-works" className="py-20 px-4 bg-white">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4">How FlyChain Works</h2>
+            <h2 className="text-4xl font-bold mb-4">How Avax-reFlights Works</h2>
             <p className="text-xl text-gray-600">Simple steps to revolutionize your travel experience</p>
           </div>
 
@@ -370,16 +586,30 @@ export default function FlyChainLanding() {
             Join the future of travel. Book your first flight on FlyChain today.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <UnifiedConnectButton
-              size="lg"
-              variant="outline"
-              className="bg-white text-gray-900 hover:bg-gray-100"
-              showRoleSwitch={true}
-            />
+            {!isLoggedIn && (
+              <>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="bg-white text-gray-900 hover:bg-gray-100"
+                  onClick={() => router.push("/signup")}
+                >
+                  Get Started
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-white text-gray-900 hover:bg-white hover:text-gray-900"
+                  onClick={() => router.push("/login")}
+                >
+                  Sign In
+                </Button>
+              </>
+            )}
             <Button
               size="lg"
               variant="outline"
-              className="border-white text-white hover:bg-white hover:text-gray-900"
+              className="border-white text-gray-900 hover:bg-white hover:text-gray-900"
               onClick={() => {
                 document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })
               }}
@@ -492,3 +722,18 @@ export default function FlyChainLanding() {
     </div>
   )
 }
+
+/*
+  To add wallet connect logic to a transaction button/component, use this pattern:
+
+  const { isWalletConnected, openConnectModal } = useWallet();
+  const handleBuy = () => {
+    if (!isWalletConnected) {
+      openConnectModal();
+      return;
+    }
+    // proceed with buy logic
+  };
+  <Button onClick={handleBuy}>Buy</Button>
+  {showConnectModal && <UnifiedConnectButton onClose={() => setShowConnectModal(false)} />}
+*/

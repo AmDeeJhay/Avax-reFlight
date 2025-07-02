@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { DollarSign } from "lucide-react"
-import { makeMarketplaceOffer } from "@/lib/api"
 
 interface MakeOfferModalProps {
   listing: any
@@ -25,39 +24,12 @@ export function MakeOfferModal({ listing, trigger }: MakeOfferModalProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
-    if (!offerAmount || isNaN(Number(offerAmount))) {
-      toast({
-        title: "Invalid Offer",
-        description: "Please enter a valid offer amount",
-        variant: "destructive",
-      })
-      return
-    }
-
-    setLoading(true)
-    try {
-      await makeMarketplaceOffer({
-        listingId: listing.id,
-        offerAmount: Number(offerAmount),
-        message,
-      })
-      toast({
-        title: "Offer Submitted",
-        description: `Your offer of ${offerAmount} AVAX has been sent to the seller`,
-      })
-      setOpen(false)
-      setOfferAmount("")
-      setMessage("")
-    } catch (err: any) {
-      toast({
-        title: "Offer Failed",
-        description: err?.message || "Failed to submit offer. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setLoading(false)
-    }
+    toast({
+      title: "Offers Not Supported",
+      description: "Submitting offers is currently not supported.",
+      variant: "destructive",
+    })
+    setOpen(false)
   }
 
   const suggestedOffer = (listing.listingPrice * 0.9).toFixed(4)

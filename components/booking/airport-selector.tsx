@@ -1,29 +1,12 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Check, ChevronsUpDown, Plane } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-
-const airports = [
-  { code: "NYC", name: "New York", airport: "John F. Kennedy International" },
-  { code: "LAX", name: "Los Angeles", airport: "Los Angeles International" },
-  { code: "CHI", name: "Chicago", airport: "O'Hare International" },
-  { code: "MIA", name: "Miami", airport: "Miami International" },
-  { code: "SEA", name: "Seattle", airport: "Seattle-Tacoma International" },
-  { code: "DEN", name: "Denver", airport: "Denver International" },
-  { code: "ATL", name: "Atlanta", airport: "Hartsfield-Jackson Atlanta International" },
-  { code: "DFW", name: "Dallas", airport: "Dallas/Fort Worth International" },
-  { code: "LAS", name: "Las Vegas", airport: "McCarran International" },
-  { code: "PHX", name: "Phoenix", airport: "Phoenix Sky Harbor International" },
-  { code: "BOS", name: "Boston", airport: "Logan International" },
-  { code: "SFO", name: "San Francisco", airport: "San Francisco International" },
-  { code: "ORD", name: "Chicago", airport: "O'Hare International" },
-  { code: "MCO", name: "Orlando", airport: "Orlando International" },
-  { code: "CLT", name: "Charlotte", airport: "Charlotte Douglas International" },
-]
+import { searchAirports } from "@/lib/api"
 
 interface AirportSelectorProps {
   value?: string
@@ -34,6 +17,27 @@ interface AirportSelectorProps {
 export function AirportSelector({ value, onSelect, placeholder = "Select airport..." }: AirportSelectorProps) {
   const [open, setOpen] = useState(false)
   const [searchValue, setSearchValue] = useState("")
+  const [airports, setAirports] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    // Fetch airports from backend on mount or when searchValue changes
+    let active = true
+    setLoading(true)
+    searchAirports(searchValue ? { q: searchValue } : {})
+      .then((data) => {
+        if (active) setAirports(data.airports || data || [])
+      })
+      .catch(() => {
+        if (active) setAirports([])
+      })
+      .finally(() => {
+        if (active) setLoading(false)
+      })
+    return () => {
+      active = false
+    }
+  }, [searchValue])
 
   const selectedAirport = airports.find((airport) => airport.code === value)
 
@@ -46,7 +50,7 @@ export function AirportSelector({ value, onSelect, placeholder = "Select airport
         airport.code.toLowerCase().includes(searchValue.toLowerCase()) ||
         airport.airport.toLowerCase().includes(searchValue.toLowerCase()),
     )
-  }, [searchValue])
+  }, [searchValue, airports])
 
   return (
     <Popover open={open} onOpenChange={setOpen}>

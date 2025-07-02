@@ -1,5 +1,5 @@
 "use client"
-import { fetchFromApi } from "@/lib/api";
+import { searchFlights } from "@/lib/api";
 
 import { useState } from "react"
 import { motion } from "framer-motion"
@@ -44,8 +44,8 @@ export default function BookFlightsPage() {
     setIsSearching(true)
 
     try {
-      // Adjust the endpoint and params as needed for your API
-      const data = await fetchFromApi("flights/search", {
+      // Use the real API utility for searching flights
+      const data = await searchFlights({
         from: searchParams.from,
         to: searchParams.to,
         departure: searchParams.departure,
